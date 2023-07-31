@@ -1,6 +1,13 @@
 import React from 'react';
 
 function Footer() {
+
+  function handleClick(e) {
+    e.preventDefault();
+    console.log("attempting sign-in") 
+    chrome.runtime.sendMessage({ message: 'submit' });
+  }
+
   return (
     <footer className="rowed">
       <div className="buttons">
@@ -23,8 +30,10 @@ function Footer() {
         </svg>
       </button>
       </div>
-      <button type="button"><strong className="link">Submit</strong></button>
+      <button type="button" onClick={handleClick}><strong className="link">Submit</strong></button>
     </footer>
+
+
   );
 };
 
