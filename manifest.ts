@@ -35,10 +35,11 @@ const manifest: chrome.runtime.ManifestV3 = {
   },
   content_scripts: [
     {
-      matches: ["http://*/*", "https://*/*", "<all_urls>"],
+      matches: ["http://leetcode.com/problems*", "https://leetcode.com/problems*"],
       js: ["src/pages/content/index.js"],
       // KEY for cache invalidation
       css: ["assets/css/contentStyle<KEY>.chunk.css"],
+	  run_at: "document_start",
     },
   ],
   devtools_page: "src/pages/devtools/index.html",
