@@ -1,10 +1,15 @@
 import React from 'react';
 
 function Footer() {
+
+function optionspage() {
+  chrome.runtime.openOptionsPage();
+}
+
   return (
     <footer className="rowed">
       <div className="buttons">
-      <button type="button" className="icon-button">
+      <button type="button" className="icon-button" onClick={optionspage}>
         <svg width="15.00" height="15.00" viewBox="0.00 0.00 150.00 150.00" xmlns="http://www.w3.org/2000/svg">
         <g strokeLinecap="round">
         <path d="M58.86,43.93 C58.48,44.16 53.21,47.72 52.11,48.73 C51.01,49.73 50.07,50.81 48.79,52.41 C47.52,54.01 45.76,56.63 44.90,58.29 C44.03,59.96 43.15,62.24 42.62,63.98 C42.09,65.72 41.03,72.38 41.02,74.03 C41.02,75.67 41.29,78.13 41.76,80.63 C42.24,83.13 42.86,85.51 43.58,87.38 C43.58,87.38 44.04,88.31 43.89,88.05 C43.89,88.05 44.21,88.63 45.40,90.66 C46.58,92.70 48.58,95.82 49.21,96.48 C51.00,98.66 54.73,101.81 57.27,103.37 C60.80,105.48 65.18,107.28 68.40,107.93 C72.66,108.74 78.27,108.73 82.58,107.96 C85.95,107.32 91.30,105.03 94.16,103.24 C96.14,101.98 99.96,98.76 100.96,97.62 C103.14,95.11 106.22,90.19 106.76,89.12 C107.74,87.13 109.69,80.24 110.01,77.05 C110.31,73.77 109.46,66.85 108.54,63.73 C107.63,60.76 103.94,54.23 102.00,51.86 C99.94,49.39 93.71,44.59 91.29,43.31 C88.39,41.81 81.06,39.94 78.11,39.64 C74.02,39.28 63.81,41.24 60.01,43.26 C59.68,43.44 59.29,43.67 58.86,43.93 Z" fill="none" strokeWidth="40.00" strokeOpacity="1.00" strokeLinejoin="round"/>
@@ -23,7 +28,7 @@ function Footer() {
         </svg>
       </button>
       </div>
-      <button type="button"><strong className="link">Submit</strong></button>
+      <button className="submit" type="button"><strong className="link">Submit</strong></button>
     </footer>
   );
 };

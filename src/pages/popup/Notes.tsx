@@ -1,10 +1,10 @@
 import React from 'react';
 
-function Notes() {
+function Notes(props) {
   return (
     <>
     <strong>Notes:</strong>
-    <textarea spellCheck="false"/>
+    <textarea spellCheck="false" value={props.notes}  onChange={(e) => props.setNotes(e.target.value)} />
     </>
   );
 };

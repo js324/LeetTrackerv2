@@ -29,6 +29,9 @@ const manifest: chrome.runtime.ManifestV3 = {
 	  run_at: "document_start",
     },
   ],
+  permissions: [
+	"storage"
+  ],
   devtools_page: "src/pages/devtools/index.html",
   web_accessible_resources: [
     {

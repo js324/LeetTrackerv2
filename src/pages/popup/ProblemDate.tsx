@@ -1,10 +1,19 @@
 import React from 'react';
 
-function ProblemDate() {
+function ProblemDate(props) {
+
+  function formatDate() {
+    let currentDate = new Date();
+    let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    props.setDate(currentDate.getDate() + " " + months[currentDate.getMonth()] + ", " + currentDate.getFullYear());
+    return props.date;  
+  }
+  
   return (
-    <>
-      <strong>Attempt Date:</strong>
-    </>
+    <span>
+      <strong className="date-label">Attempt Date:</strong>
+      <span className='date'>{formatDate()}</span>
+    </span>
   );
 };
 

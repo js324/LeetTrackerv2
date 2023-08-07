@@ -4,7 +4,7 @@ function Complexities(props) {
   return (
     <span className="rowed">
         <strong>{props.name}:</strong>
-        <input type="text" className="inlined" spellCheck="false" />
+        <input type="text" value={props.comp} onChange={(e) => props.setComp(e.target.value)} className="inlined" spellCheck="false" />
     </span>
   );
 };
