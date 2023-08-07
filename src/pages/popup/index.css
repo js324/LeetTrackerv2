@@ -1,5 +1,7 @@
 body {
   width: 300px;
+  max-height: 1000px;
+  resize: vertical;
   height: 475px;
   margin: 0;
   padding: 10px;

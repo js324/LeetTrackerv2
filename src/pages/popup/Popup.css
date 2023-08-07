@@ -63,14 +63,14 @@ input[type=text]{
   border: none;
   border-radius:5px;
   padding: 3px;
-  margin: 5px 2px;
+  margin: 3px 2px;
   font-size:0.9em;
   color:#6b6b6b;
 }
   input[type=text]:focus {
     outline: none !important;
     border: 2px solid #adadad;
-    margin: 3px 0px;
+    margin: 1px 0px;
   }
   input[type=text]::selection {
     background:#adadad;
@@ -98,7 +98,7 @@ textarea{
   font-family: inherit;
   border-radius:5px;
   padding: 3px;
-  margin: 5px 2px;
+  margin: 0px 2px 5px;
   font-size:0.9em;
   color:#6b6b6b;
 }
@@ -114,10 +114,18 @@ textarea{
 
 .solve-row {
   color:#6b6b6b;
+  display: flex;
+  justify-content: left;
+  align-items: center;
+}
+.solved-logo {
+  stroke: #61b357;
+  margin: 2px 6px 0px 3px;
 }
 .rowed {
   display:flex;
   justify-content:space-between;
+  
 }
 
 footer{
@@ -125,19 +133,20 @@ footer{
 }
 
 button {
+  border: none;
+}
+
+button.submit {
   background-color: #61b357;
   padding: 5px 10px;
   border-radius:5px;
   color: white;
   border :none !important;
 }
-  button:hover {
+  button.submit:hover {
     transition: all 0.2s ease;
     background-color: #407a64;
-    padding: 5px 10px;
-    border-radius:5px;
     color: white;
-    border :none !important;
     cursor:pointer;
   }
 button.icon-button {
@@ -163,26 +172,45 @@ button.icon-button {
   width: 300px;
   display: flex;
   flex-wrap:wrap;
+  margin: 0px 0px 3px;
   align-items: center;
   flex-direction: row;
 }
 .tag {
-  cursor:pointer;
-  padding: 3px 15px;
+  cursor:context-menu;
+  padding: 3px 5px 3px 15px;
   width: fit-content;
   border-radius: 15px;
   font-size: 0.9em;
+  align-items: center;
   background-color: #dfdfdf;
   color:#6b6b6b;
   align-items: center;
-  margin: 5px 5px 2px 2px;
+  flex-direction: row;
+  margin: 5px 5px 2px 2px ;
 }
   .tag:hover {
     border: 2px #adadad solid;
     margin: 3px 3px 0px 0px;
   }
+.delete-tag {
+  margin: 0px 2px 0px 5px;
+  width: fit-content;
+  padding: 4px 5px 2px;
+  align-items: center;
+  justify-content: center;
+  background-color: #dfdfdf;
+  stroke:#6b6b6b;
+  border-radius: 100px;
+  cursor: pointer;
+}
+  .delete-tag:hover {
+    background: #b9b9b9;
+  border-radius: 100px;
+  }
 .easy {
   background-color: #aedbac;
+  padding: 3px 15px;
   color:#006d12;
 }
   .easy:hover {
@@ -190,6 +218,7 @@ button.icon-button {
   }
 .medium {
   background-color: #f5de9e;
+  padding: 3px 15px;
   color:#6d4100;
 }
 .medium:hover {
@@ -197,13 +226,16 @@ button.icon-button {
 }
 .hard {
   background-color: #f5ab9e;
+  padding: 3px 15px;
   color:#6d0400;
 }
 .hard:hover {
   border: 2px #dd7c79 solid;
 }
 .add-tag {
-  padding: 3px 8px;
+  padding: 4px 7px;
+  stroke:#6b6b6b;
+  cursor: pointer;
 }
 
 .star {
@@ -216,4 +248,47 @@ button.icon-button {
 .star:hover {
   fill: #f5de9e;
   margin: 5px 10px 0px;
+}
+
+.full {
+  fill: rgb(245, 183, 50);
+}
+
+.new-tag {
+  padding:0px 5px 0px 0px;
+  cursor:text;
+  outline: none !important;
+  
+}
+.new-tag::selection {
+  background:#adadad;
+  color: white;
+}
+.push-tag {
+  margin: 0px 2px 0px 0px;
+  background: #dfdfdf !important;
+  width: fit-content;
+  padding: 4px 5px 2px;
+  align-items: center;
+  justify-content: center;
+  stroke:#6b6b6b;
+  border-radius: 100px;
+  cursor: pointer;
+}
+  .push-tag:hover {
+    background: #b9b9b9 !important;
+  }
+.date-label {
+  margin: 5px 37px 5px 0px;
+}
+.date {
+  font-size: 0.95em;
+  color:#6b6b6b;
+}
+
+.contain {
+  background:#00000000;
+  margin: 0px;
+  padding: 0px;
+
 }
