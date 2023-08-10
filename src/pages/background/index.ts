@@ -1,3 +1,4 @@
+import { text } from "stream/consumers";
 import reloadOnUpdate from "virtual:reload-on-update-in-background-script";
 
 reloadOnUpdate("pages/background");
@@ -18,7 +19,9 @@ console.log("background loaded now update");
 
 const API_KEY = '';
 let user_signed_in = false;
-
+let spreadsheetUrl = chrome.storage.sync.get("spreadsheetUrl");
+let spreadsheetId = chrome.storage.sync.get("spreadsheetId");
+let sheetId = chrome.storage.sync.get("sheetId");
 
 chrome.identity.onSignInChanged.addListener(function (account_id, signedIn) {
     if (signedIn) {
@@ -30,24 +33,94 @@ chrome.identity.onSignInChanged.addListener(function (account_id, signedIn) {
  //have functions for just creating and intializing format of spreadsheet, authorizing oauth, 
  //appending rows
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-
+    if (request.message === 'reset') {
+        chrome.identity.getAuthToken({ interactive: true }, async function (token) {
+        deleteSheet(token, await spreadsheetId);
+        
+        createFormatSheet();
+        });
+    }
     if (request.message === 'submit') {
         //case 1: completely new user (or spreadsheet was deleted), create spreadsheet and then store id
         //case 2: user previously created spreadsheet and have stored sheet id in storage
         //case 3: user previously created spreadsheet, for some reason sheet id not stored, retrieve from drive
-        chrome.identity.getAuthToken({ interactive: true }, function (token) {
-        console.log("Auth token flow")
-            createFormatSheet();
-            let spreadsheetId = chrome.storage.sync.get("spreadsheetId");
-            console.log(spreadsheetId);
-        });
-    }
-    if (request.message == "append_row") { //look into failure case
-        chrome.identity.getAuthToken({ interactive: false }, function (token) {
+        chrome.identity.getAuthToken({ interactive: true }, async function (token) {
             
+            if (Object.keys(await spreadsheetId).length === 0) { //empty
+                console.log("NO SAVED DATA");
+                if (!getSheetFromDrive(token)) { 
+                    console.log("NO SHEET IN DRIVE");
+                    createFormatSheet();
+                    
+                }
+                appendRow(token, await spreadsheetId);
+            }
+            else {
+                chrome.storage.session.get({p_name: ""}).then(async ({p_name}) => {
+                    let rowInd = await findRow(token, spreadsheetId, p_name);
+                    if (rowInd == -1) { //not found, just append
+                        appendRow(token, await spreadsheetId);
+                    }
+                    else {
+
+                    }
+                }); 
+
+                
+            }
         });
     }
+    
 });
+async function updateRow(token, spreadsheetId, rowInd) {
+    
+}
+async function findRow(token, spreadsheetId, title) {
+    let rows;
+    let fetchWorked = true;
+    let init = {
+        method: 'GET',
+        async: true,
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+      };
+    fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId["spreadsheetId"]}/values:batchGet?ranges=A:A`,
+        init)
+        .then((response) => {
+            if (!response.ok) { 
+                console.log("Getting drive sheet failed!");
+                fetchWorked = false;
+                return false;
+            }
+            
+            return response.json();
+        }).then((data) => { 
+            console.log(data)
+            rows = data['valueRanges'][0]['values'].findIndex((element) => element[0] == title);
+            console.log(rows);
+
+        });
+        return rows === undefined ? -1 : rows;
+
+}
+async function deleteSheet(token, spreadsheetId) {
+    
+    let init = {
+        method: 'POST',
+        async: true,
+        headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'
+            
+        }
+    };
+    fetch(
+        `https://www.googleapis.com/drive/v2/files/${spreadsheetId["spreadsheetId"]}/trash`,
+        init)
+}
 function createFormatSheet() {
     chrome.identity.getAuthToken({ interactive: true }, function (token) {
         console.log(token);
@@ -69,12 +142,14 @@ function createFormatSheet() {
             .then((response) => response.json())
             .then(function(data) {
                 console.log(data)
-                chrome.storage.sync.set({ "spreadsheetUrl": data["spreadsheetUrl"] })
+                chrome.storage.sync.set({ "spreadsheetUrl": data["spreadsheetUrl"] });
+                chrome.storage.sync.set({ 'sheetId': data['sheets'][0]['properties']['sheetId']});
                 chrome.storage.sync.set({ "spreadsheetId": data["spreadsheetId"] }).then(() => {
                     console.log("Value is set");
                     
                 });
                 addFormatHeader(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']);
+                formatDataRows(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']);
             });
             
             
@@ -82,6 +157,8 @@ function createFormatSheet() {
     });
 }
 function getSheetFromDrive(token) {
+    
+    let fetchWorked = true;
     let init = {
         method: 'GET',
         async: true,
@@ -91,18 +168,127 @@ function getSheetFromDrive(token) {
         },
       };
     fetch(
-        'https://www.googleapis.com/drive/v3/files',
+        'https://www.googleapis.com/drive/v3/files?q=trashed%3Dfalse',
         init)
-        .then((response) => response.json())
+        .then((response) => {
+            if (!response.ok) { 
+                console.log("Getting drive sheet failed!");
+                fetchWorked = false;
+                return false;
+            }
+            return response.json();
+        })
         .then(function(data) {
-        chrome.storage.sync.set({ "spreadsheetUrl": data["spreadsheetUrl"] })
-        chrome.storage.sync.set({ "spreadsheetId": data["spreadsheetId"] }).then(() => {
-            console.log("Value is set");
-            });
+            if (data) {
+                console.log(data); //actually needs spreadsheet.get with the Spreadsheet ID (taken from drive fetch)
+                
+                chrome.storage.sync.set({ "spreadsheetId": data["files"][0]["id"] }).then(() => {
+                    console.log("Value is set");
+                });
+            }
         });
+        return fetchWorked;
     
 }
-function appendRow(token, spreadsheetId) {
+function hexToRgb(hex) {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+    return r + r + g + g + b + b;
+    });
+
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+    red: parseInt(result[1], 16)/255,
+    green: parseInt(result[2], 16)/255,
+    blue: parseInt(result[3], 16)/255,
+    alpha: .01
+    } : null;
+}
+async function appendRow(token, spreadsheetId) {
+    chrome.storage.session.get({url: "", p_name: "", p_isfave: 0, p_solved: 0, p_difficulty: "", p_tags: ["  "], 
+    p_tcomp: "  ", p_scomp: "  ", p_notes: "  "}).then(({url, p_name, p_isfave, p_solved, p_difficulty, p_tags, p_tcomp, p_scomp, p_notes}) => {
+        let backgroundColor = {};
+        let textColor = {};
+        console.log(url, p_name, p_isfave, p_solved, p_difficulty, p_tags, p_tcomp, p_scomp, p_notes);
+        p_solved = p_solved == 1 ? true : false;//have to do this check because technically can be -1
+        p_isfave = p_isfave == 1 ? true : false;
+
+        switch (p_difficulty) {
+            case "Easy":
+                backgroundColor = hexToRgb("#aedbac");
+                textColor = hexToRgb("#006d12");
+                break;
+            case "Medium":
+                backgroundColor = hexToRgb("#f5de9e");
+                textColor = hexToRgb("#6d4100");
+                break;
+            case "Hard":
+                backgroundColor = hexToRgb("#f5ab9e");
+                textColor = hexToRgb("#6d0400");
+                break;
+            default:
+                break;
+        }
+        let init = {
+            method: 'POST',
+            async: true,
+            headers: {
+                Authorization: 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            'contentType': 'json', 
+            body: JSON.stringify({
+                "requests": [
+                    {
+                        "appendCells": {
+                            "sheetId": 0,
+                            "rows": [
+                                {
+                                    "values": [ 
+                                    { "userEnteredValue": { "formulaValue": `=HYPERLINK(\"${url}\", \"${p_name}\")`},
+                                        "userEnteredFormat": {"horizontalAlignment": "Center", "verticalAlignment": "MIDDLE",
+                                        "wrapStrategy": 'WRAP', "textFormat": { "fontSize": 12 }}},
+                                    { "userEnteredValue": { "stringValue": p_difficulty},
+                                    "userEnteredFormat": {"horizontalAlignment": "Center", "verticalAlignment": "MIDDLE",
+                                    "wrapStrategy": 'WRAP', "backgroundColor": backgroundColor, 
+                                    "textFormat": { "foregroundColorStyle": { "rgbColor": textColor }}}},
+                                    { "userEnteredValue": { "stringValue": p_tags.toString()},
+                                    "userEnteredFormat": {"verticalAlignment": "MIDDLE", "wrapStrategy": 'WRAP'}},
+                                    { "userEnteredValue": { "boolValue": p_solved}},
+                                    { "userEnteredValue": { "stringValue": p_tcomp},
+                                    "userEnteredFormat": {"horizontalAlignment": "Center", "verticalAlignment": "MIDDLE",
+                                    "wrapStrategy": 'WRAP',}},
+                                    { "userEnteredValue": { "stringValue": p_scomp},
+                                    "userEnteredFormat": {"horizontalAlignment": "Center", "verticalAlignment": "MIDDLE",
+                                    "wrapStrategy": 'WRAP',}},
+                                    { "userEnteredValue": { "stringValue": p_notes},
+                                    "userEnteredFormat": {"verticalAlignment": "MIDDLE", "wrapStrategy": 'WRAP',}},
+                                    { "userEnteredValue": { "stringValue": new Date(Date.now()).toLocaleString().split(',')[0]},
+                                    "userEnteredFormat": {"horizontalAlignment": "Center", "verticalAlignment": "MIDDLE",
+                                    "wrapStrategy": 'WRAP',}},
+                                    { "userEnteredValue": { "boolValue": p_isfave}},
+                                    ]
+                                }
+                            ],
+                            "fields": "userEnteredValue, userEnteredFormat"
+                        }
+                    }
+                ]
+            })
+            
+            };
+            //8
+        fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId["spreadsheetId"]}:batchUpdate`,
+            init)
+            .then((response) => response.json())
+            .then(function(data) {
+                console.log(data);
+            });
+    });
+    //Just do color coding/check with variables HERE instead of the sheets 
+    //no good way to have if/else if/ else statement for Easy,Medium,Hard
     
 }
 function addFormatHeader(token, spreadsheetId, sheetId) {
@@ -142,6 +328,37 @@ function addFormatHeader(token, spreadsheetId, sheetId) {
         'contentType': 'json', 
         body: JSON.stringify({ 
             "requests": [
+                {
+                    'addBanding': {
+                        'bandedRange': {
+                            'bandedRangeId': 1,
+                            'range': {
+                               'sheetId': sheetId,
+                                'startRowIndex': 0
+                            },
+                            'rowProperties': {
+                              'headerColor': {
+                                'red': 0,
+                                'green': 0,
+                                'blue': 1,
+                                'alpha': 1,
+                              },
+                              'firstBandColor': {
+                                'red': .92156,
+                                'green': .9372,
+                                'blue': .94509,
+                                'alpha': 0,
+                              },
+                              'secondBandColor': {
+                                'red': 1.0,
+                                'green': 1.0,
+                                'blue': 1.0,
+                                'alpha': 0,
+                              }
+                            },
+                          },
+                    },
+                },
                 {
                     'updateDimensionProperties': {
                         'range': {
@@ -204,15 +421,14 @@ function addFormatHeader(token, spreadsheetId, sheetId) {
                       "sheetId": sheetId,
                       "startRowIndex": 0,
                       "endRowIndex": 1,
-                      "startColumnIndex": 0,
-                      "endColumnIndex": 9
+                      "startColumnIndex": 0
                     },
                     "cell": {
                       "userEnteredFormat": {
                         "backgroundColor": {
-                          "red": 0.0,
-                          "green": 0.0,
-                          "blue": 0.0
+                          "red": .2901,
+                          "green": .5254,
+                          "blue": .9098 
                         }, 
                         "wrapStrategy": 'WRAP',
                         "horizontalAlignment" : "CENTER",
@@ -227,7 +443,7 @@ function addFormatHeader(token, spreadsheetId, sheetId) {
                         }
                       }
                     },
-                    "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)"
+                    "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment, wrapStrategy)"
                   }
                 },
                 {
@@ -256,4 +472,50 @@ function addFormatHeader(token, spreadsheetId, sheetId) {
         //have cell text wrap WrapStrategy (so cell text doesnt clip especially for notes)
         //maybe for review history just have another worksheet and table for tracking
         //add pushing to github (with file structure)
+}
+
+function formatDataRows(token, spreadsheetId, sheetId) { 
+    let init = {
+        method: 'POST',
+        async: true,
+        headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        'contentType': 'json', 
+        body: JSON.stringify({ 
+            "requests": [
+                {
+                    "repeatCell": {
+                      "range": {
+                        "sheetId": sheetId,
+                        "startColumnIndex": 3,
+                        "endColumnIndex": 4,
+                      },
+                      "cell": {'dataValidation': {'condition': {'type': 'BOOLEAN'}}},
+                      'fields': 'dataValidation'
+                    }
+                },
+                {
+                    "repeatCell": {
+                      "range": {
+                        "sheetId": sheetId,
+                        "startColumnIndex": 8,
+                        "endColumnIndex": 9,
+                      },
+                      "cell": {'dataValidation': {'condition': {'type': 'BOOLEAN'}}},
+                      'fields': 'dataValidation'
+                    }
+                },
+            ]
+        })
+        };
+        
+    fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+        init)
+        .then((response) => response.json())
+        .then(function(data) {
+            console.log(data);
+        });
 }

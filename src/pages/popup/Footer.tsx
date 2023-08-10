@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Footer() {
+function Footer(props) {
   function handleClick(e) {
     e.preventDefault();
     console.log("attempting sign-in") 
