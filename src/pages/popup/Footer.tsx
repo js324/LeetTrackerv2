@@ -12,7 +12,8 @@ function optionspage() {
 }
 
 function tospreadsheet() {
-  alert("this is supposed to take you to the spreadsheet 😝");
+  chrome.storage.sync.get({spreadsheetId : ""}).then(({spreadsheetId}) => 
+  {chrome.tabs.create({url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`})});
 }
 
 function toleetcode() {
