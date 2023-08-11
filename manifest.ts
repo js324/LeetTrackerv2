@@ -44,6 +44,7 @@ const manifest: chrome.runtime.ManifestV3 = {
     },
   ],
   devtools_page: "src/pages/devtools/index.html",
+  options_page: "src/pages/options/index.html",
   web_accessible_resources: [
     {
       resources: [

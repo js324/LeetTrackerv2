@@ -5,7 +5,8 @@ function SheetReset() {
   const [isWarning, setWarning] = useState(false);
 
   function resetSpreadsheet() {
-    //whatever needs to be done
+    console.log("attempting reset");
+    chrome.runtime.sendMessage({ message: 'reset' });
     alert("Spreadsheet has been reset!");
     setWarning(false);
   }

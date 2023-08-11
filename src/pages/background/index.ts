@@ -19,9 +19,7 @@ console.log("background loaded now update");
 
 const API_KEY = '';
 let user_signed_in = false;
-let spreadsheetUrl = chrome.storage.sync.get("spreadsheetUrl");
-let spreadsheetId = chrome.storage.sync.get("spreadsheetId");
-let sheetId = chrome.storage.sync.get("sheetId");
+
 
 chrome.identity.onSignInChanged.addListener(function (account_id, signedIn) {
     if (signedIn) {
@@ -35,9 +33,10 @@ chrome.identity.onSignInChanged.addListener(function (account_id, signedIn) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.message === 'reset') {
         chrome.identity.getAuthToken({ interactive: true }, async function (token) {
-        deleteSheet(token, await spreadsheetId);
-        
-        createFormatSheet();
+            chrome.storage.sync.get("spreadsheetId").then(async (spreadsheetId) => {
+                deleteSheet(token, spreadsheetId);
+                createFormatSheet();
+            });
         });
     }
     if (request.message === 'submit') {
@@ -45,35 +44,70 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         //case 2: user previously created spreadsheet and have stored sheet id in storage
         //case 3: user previously created spreadsheet, for some reason sheet id not stored, retrieve from drive
         chrome.identity.getAuthToken({ interactive: true }, async function (token) {
-            
-            if (Object.keys(await spreadsheetId).length === 0) { //empty
+            chrome.storage.sync.get("spreadsheetId").then(async (spreadsheetId) => {
+            if (Object.keys(spreadsheetId).length === 0) { //empty
                 console.log("NO SAVED DATA");
                 if (!getSheetFromDrive(token)) { 
                     console.log("NO SHEET IN DRIVE");
                     createFormatSheet();
                     
                 }
-                appendRow(token, await spreadsheetId);
+                appendRow(token, spreadsheetId);
             }
             else {
                 chrome.storage.session.get({p_name: ""}).then(async ({p_name}) => {
-                    let rowInd = await findRow(token, spreadsheetId, p_name);
+                    findRow(token, spreadsheetId, p_name).then(async (rowInd) => {
+                    console.log(rowInd);
                     if (rowInd == -1) { //not found, just append
-                        appendRow(token, await spreadsheetId);
+                        appendRow(token, spreadsheetId);
                     }
                     else {
-
+                        updateRow(token, spreadsheetId, rowInd+1);
                     }
+                    });
                 }); 
 
                 
             }
         });
+        });
     }
     
 });
 async function updateRow(token, spreadsheetId, rowInd) {
-    
+    chrome.storage.session.get({url: "", p_name: "", p_isfave: 0, p_solved: 0, p_difficulty: "", p_tags: ["  "], 
+    p_tcomp: "  ", p_scomp: "  ", p_notes: "  "}).then(({url, p_name, p_isfave, p_solved, p_difficulty, p_tags, p_tcomp, p_scomp, p_notes}) => {
+        p_solved = p_solved == 1 ? true : false;//have to do this check because technically can be -1
+        p_isfave = p_isfave == 1 ? true : false;
+        let init = {
+        method: 'PUT',
+        async: true,
+        headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        'contentType': 'json', 
+        body: JSON.stringify({ 
+            "range": `A${rowInd}`,
+            "majorDimension": "ROWS",
+            // "valueInputOption": 'USER_ENTERED',
+            
+            "values": [
+              [`=HYPERLINK(\"${url}\", \"${p_name}\")`, p_difficulty, p_tags.toString(), p_solved, p_tcomp, 
+              p_scomp, p_notes, new Date(Date.now()).toLocaleString().split(',')[0], p_isfave]
+            ]
+        })
+    };
+        //8
+    fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId["spreadsheetId"]}/values/A${rowInd}?valueInputOption=USER_ENTERED`,
+        init)
+        .then((response) => response.json())
+        .then(function(data) {
+            console.log(data);
+        });
+    });
+
 }
 async function findRow(token, spreadsheetId, title) {
     let rows;
@@ -86,7 +120,7 @@ async function findRow(token, spreadsheetId, title) {
           'Content-Type': 'application/json'
         },
       };
-    fetch(
+    return fetch(
         `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId["spreadsheetId"]}/values:batchGet?ranges=A:A`,
         init)
         .then((response) => {
@@ -101,9 +135,9 @@ async function findRow(token, spreadsheetId, title) {
             console.log(data)
             rows = data['valueRanges'][0]['values'].findIndex((element) => element[0] == title);
             console.log(rows);
-
+            return rows === undefined ? -1 : rows;
         });
-        return rows === undefined ? -1 : rows;
+        
 
 }
 async function deleteSheet(token, spreadsheetId) {
