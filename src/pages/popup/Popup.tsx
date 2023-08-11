@@ -12,16 +12,16 @@ import "@pages/popup/Popup.css";
 function Popup() {
 
   const [isLeet, setIsLeet] = useState(false);
-  const [problemName, setName] = useState("");
-  const [isFave, setFave] = useState(-1);
+  const [problemName, setName] = useState(""); // string
+  const [isFave, setFave] = useState(-1); // kinda of a boolean: -1/0 = false; 1 = true
   
-  const [isSolved, setSolved] = useState(-1);
-  const [difficulty, setDifficulty] = useState("");
-  const [taglist, setTags] = useState(["  "]);
-  const [date, setDate] = useState("  ");
-  const [timeComp, setTimeComp] = useState("  ");
-  const [spaceComp, setSpaceComp] = useState("  ");
-  const [notes, setNotes] = useState("  ");
+  const [isSolved, setSolved] = useState(false); //boolean
+  const [difficulty, setDifficulty] = useState(""); //string
+  const [taglist, setTags] = useState(["  "]); // array of strings
+  const [date, setDate] = useState("  "); //string
+  const [timeComp, setTimeComp] = useState("  "); //string
+  const [spaceComp, setSpaceComp] = useState("  "); //string
+  const [notes, setNotes] = useState("  "); //string
 
   const [tagUpdate, setTUpdate] = useState(false);
 
@@ -36,13 +36,22 @@ function Popup() {
       setFave(1);
   }
 
+  function getTheme() {
+    chrome.storage.sync.get({o_theme: "light"}, (options) => {
+      console.log("got o_theme from sync memory");
+      const bod = document.getElementsByTagName('body')[0];
+      bod.dataset.theme = options.o_theme;
+    });
+  }
+  useEffect(() => {getTheme();}, []);
+
   function loadStuff() {
 
     chrome.tabs.query({active: true, lastFocusedWindow: true}, ([tab]) => {
       chrome.tabs.sendMessage(tab.id, {text: "load"}, (response) => {
           if (response.p_isleet){
             console.log("this is a leetpage.");
-          chrome.storage.session.get({p_name: "", p_isfave: -1, p_solved: -1, p_difficulty: "", p_tags: ["  "], p_tcomp: "  ", p_scomp: "  ", p_notes: "  "}).then((stuff) => {
+          chrome.storage.session.get({p_name: "", p_isfave: -1, p_solved: false, p_difficulty: "", p_tags: ["  "], p_tcomp: "  ", p_scomp: "  ", p_notes: "  "}).then((stuff) => {
             console.log("get something or nothing from session storage");
             if (response.p_name === stuff.p_name || response.p_name === " x ") {
               console.log("loading from old data, same problem");
@@ -50,7 +59,7 @@ function Popup() {
               setIsLeet(true);
               setName(stuff.p_name);
               setFave(stuff.p_isfave);
-              if (response.p_solved !== -1)
+              if (response.p_solved)
                 setSolved(response.p_solved);
               else 
                 setSolved(stuff.p_solved)
@@ -76,11 +85,7 @@ function Popup() {
       });  
     });
 
- 
-    
   }
-
-
 
   useEffect(() => {loadStuff();}, []);
 
@@ -109,6 +114,11 @@ function Popup() {
       chrome.storage.session.set({p_tags: taglist}, () => { console.log("taglist="+taglist); });
   }, [tagUpdate]);
 
+  useEffect(() => {
+    if (isSolved)
+      chrome.storage.session.set({p_solved: isSolved}, () => { console.log("solved="+isSolved); });
+  }, [isSolved]);
+
   return (
     <div className="App">
       <header>
@@ -126,7 +136,7 @@ function Popup() {
         <Complexities name={"Time Complexity"} comp={timeComp} setComp={setTimeComp} />
         <Complexities name={"Space Complexity"} comp={spaceComp} setComp={setSpaceComp} />
         <Notes notes={notes} setNotes={setNotes} />
-        <Footer />
+        
         </>
         )
       }
@@ -138,7 +148,7 @@ function Popup() {
           </div>
         )
       }
-      
+      <Footer isLeet={isLeet} />
     </div>
   );
 };

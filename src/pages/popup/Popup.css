@@ -1,3 +1,45 @@
+body {
+  --c-background: #fafafa;
+  --c-heading: #000000;
+  --c-text: #6b6b6b;
+  --c-subback: #dfdfdf;
+  --c-subbord: #adadad;
+  --c-subhove: #b9b9b9;
+  --c-solvmit: #61b357;
+  --c-solvhov: #407a64;
+  --c-easy: #aedbac;
+  --c-easytxt: #006d12;
+  --c-easybdr: #76b985;
+  --c-medium: #f5de9e;
+  --c-mediumt: #6d4100;
+  --c-mediumb: #d8b66d;
+  --c-hard: #f5ab9e;
+  --c-hardtxt: #6d0400;
+  --c-hardbdr: #dd7c79;
+
+}
+ body[data-theme='dark']{
+  --c-background: #202020;
+  --c-heading: #e9e9e9;
+  --c-text: #c0c0c0;
+  --c-subback: #4e4e4e;
+  --c-subbord: #6d6d6d;
+  --c-subhove: #616161;
+  --c-solvmit: #3b8b30;
+  --c-solvhov: #6ab44c;
+  --c-easy: #84b981;
+  --c-easytxt: #095c16;
+  --c-easybdr: #9bc5a9;
+  --c-medium: #cca65f;
+  --c-mediumt: #522c00;
+  --c-mediumb: #dac47b;
+  --c-hard: #b8786d;
+  --c-hardtxt: #2b0100;
+  --c-hardbdr: #c57d79;
+}
+body {
+  transition: all 0.2s ease;
+}
 .App {
   position: absolute;
   top: 0px;
@@ -7,8 +49,8 @@
   text-align: left;
   height: 100%;
   padding: 10px;
-  background-color: #fafafa;
-  color: black;
+  background-color: var(--c-background);
+  color: var(--c-heading);
   display: flex;
   flex-direction: column;
   font-size: 16px;
@@ -25,12 +67,12 @@
   text-align: center;
   margin: 10px 0px 0px;
   font-size: .8em;
-  color: #6b6b6b;
+  color: var(--c-text);
 }
 
 
 ::selection {
-  background: rgba(69, 143, 94, 0);
+  background: #00000000;
 }
 
 header {
@@ -42,7 +84,7 @@ header {
   align-items: center;
   justify-content: left;
   font-size: 1.2em;
-  border-bottom: #d1d1d1 2px solid;
+  border-bottom: var(--c-subback) 2px solid;
 }
 
 h1{
@@ -59,21 +101,21 @@ img{
 }
 
 input[type=text]{
-  background-color:#dfdfdf;
+  background-color:var(--c-subback);
   border: none;
   border-radius:5px;
   padding: 3px;
   margin: 3px 2px;
   font-size:0.9em;
-  color:#6b6b6b;
+  color:var(--c-text);
 }
   input[type=text]:focus {
     outline: none !important;
-    border: 2px solid #adadad;
+    border: 2px solid var(--c-subbord);
     margin: 1px 0px;
   }
   input[type=text]::selection {
-    background:#adadad;
+    background:var(--c-subbord);
     color: white;
   }
   input[type=text].inlined {
@@ -92,34 +134,34 @@ strong {
 
 textarea{
   flex-grow: 1;
-  background-color:#dfdfdf;
+  background-color:var(--c-subback);
   border: none;
   resize: none;
   font-family: inherit;
   border-radius:5px;
   padding: 3px;
-  margin: 0px 2px 5px;
+  margin: 2px 2px 5px;
   font-size:0.9em;
-  color:#6b6b6b;
+  color:var(--c-text);
 }
   textarea:focus {
       outline: none !important;
-      border: 2px solid #adadad;
-      margin: 0px;
+      border: 2px solid var(--c-subbord);
+      margin: 0px 0px 3px;
     }
     textarea::selection {
-      background:#adadad;
+      background:var(--c-subbord);
       color: white;
     }
 
 .solve-row {
-  color:#6b6b6b;
+  color:var(--c-text);
   display: flex;
   justify-content: left;
   align-items: center;
 }
 .solved-logo {
-  stroke: #61b357;
+  stroke: var(--c-solvmit);
   margin: 2px 6px 0px 3px;
 }
 .rowed {
@@ -137,7 +179,7 @@ button {
 }
 
 button.submit {
-  background-color: #61b357;
+  background-color: var(--c-solvmit);
   padding: 5px 10px;
   border-radius:5px;
   color: white;
@@ -145,26 +187,26 @@ button.submit {
 }
   button.submit:hover {
     transition: all 0.2s ease;
-    background-color: #407a64;
+    background-color: var(--c-solvhov);
     color: white;
     cursor:pointer;
   }
 button.icon-button {
   padding: 0px;
-  background-color: #dfdfdf;
+  background-color: var(--c-subback);
   height: 25px;
   width: 25px;
   align-items: center;
   padding: 5px 0px 0px;
   margin: 0px 0px 0px 5px;
   border-radius:100px;
-  stroke: #6b6b6b;
+  stroke: var(--c-text);
   border :none !important;
 }
   button.icon-button:hover{
     transition: all 0.2s ease;
-    background-color: #6b6b6b;
-    stroke: #dfdfdf;
+    background-color: var(--c-text);
+    stroke: var(--c-subback);
     border :none !important;
     cursor:pointer;
   }
@@ -183,14 +225,14 @@ button.icon-button {
   border-radius: 15px;
   font-size: 0.9em;
   align-items: center;
-  background-color: #dfdfdf;
-  color:#6b6b6b;
+  background-color: var(--c-subback);
+  color:var(--c-text);
   align-items: center;
   flex-direction: row;
   margin: 5px 5px 2px 2px ;
 }
   .tag:hover {
-    border: 2px #adadad solid;
+    border: 2px var(--c-subbord) solid;
     margin: 3px 3px 0px 0px;
   }
 .delete-tag {
@@ -199,59 +241,59 @@ button.icon-button {
   padding: 4px 5px 2px;
   align-items: center;
   justify-content: center;
-  background-color: #dfdfdf;
-  stroke:#6b6b6b;
+  background-color: var(--c-subback);
+  stroke:var(--c-text);
   border-radius: 100px;
   cursor: pointer;
 }
   .delete-tag:hover {
-    background: #b9b9b9;
+    background: var(--c-subhove);
   border-radius: 100px;
   }
 .easy {
-  background-color: #aedbac;
+  background-color: var(--c-easy);
   padding: 3px 15px;
-  color:#006d12;
+  color:var(--c-easytxt);
 }
   .easy:hover {
-    border: 2px #76b985 solid;
+    border: 2px var(--c-easybdr) solid;
   }
 .medium {
-  background-color: #f5de9e;
+  background-color: var(--c-medium);
   padding: 3px 15px;
-  color:#6d4100;
+  color:var(--c-mediumt);
 }
 .medium:hover {
-  border: 2px #d8b66d solid;
+  border: 2px var(--c-mediumb) solid;
 }
 .hard {
-  background-color: #f5ab9e;
+  background-color: var(--c-hard);
   padding: 3px 15px;
-  color:#6d0400;
+  color:var(--c-hardtxt);
 }
 .hard:hover {
-  border: 2px #dd7c79 solid;
+  border: 2px var(--c-hardbdr) solid;
 }
 .add-tag {
   padding: 4px 7px;
-  stroke:#6b6b6b;
+  stroke:var(--c-text);
   cursor: pointer;
 }
 
 .star {
-  stroke: rgb(245, 183, 50);
+  stroke: #f5b732;
   cursor:pointer;
   transition: all 0.2s ease;
   fill: #00000000;
   margin: 5px 10px 0px;
 }
 .star:hover {
-  fill: #f5de9e;
+  fill: #f5b73288;
   margin: 5px 10px 0px;
 }
 
 .full {
-  fill: rgb(245, 183, 50);
+  fill: #f5b732;
 }
 
 .new-tag {
@@ -261,29 +303,29 @@ button.icon-button {
   
 }
 .new-tag::selection {
-  background:#adadad;
+  background:var(--c-subbord);
   color: white;
 }
 .push-tag {
   margin: 0px 2px 0px 0px;
-  background: #dfdfdf !important;
+  background: var(--c-subback) !important;
   width: fit-content;
   padding: 4px 5px 2px;
   align-items: center;
   justify-content: center;
-  stroke:#6b6b6b;
+  stroke:var(--c-text);
   border-radius: 100px;
   cursor: pointer;
 }
   .push-tag:hover {
-    background: #b9b9b9 !important;
+    background: var(--c-subhove) !important;
   }
 .date-label {
   margin: 5px 37px 5px 0px;
 }
 .date {
   font-size: 0.95em;
-  color:#6b6b6b;
+  color:var(--c-text);
 }
 
 .contain {

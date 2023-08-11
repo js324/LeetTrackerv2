@@ -7,14 +7,14 @@ export default function App() {
 
       console.log("hello!");
 
-      if (document.URL.indexOf("leetcode.com/problems/") != 1) {
+      if (document.URL.indexOf("leetcode.com/problems/") != 1 && document.URL.indexOf("problemset") === -1) {
         const name = document.querySelector("div.flex.h-full.items-center a.mr-2.text-label-1"); //get name
 
         var solved = document.querySelector("div.text-green-s svg path");
         if (!solved)
           solved = document.querySelector("span.text-green-s");
         
-        const solvestatus = (solved) ? 1 : 0;
+        const solvestatus = (solved) ? true : false;
 
         const difficulty = document.querySelector("div.mt-3.flex.items-center.space-x-4 div"); //get difficulty
 
