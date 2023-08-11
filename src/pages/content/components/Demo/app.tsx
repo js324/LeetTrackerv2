@@ -34,12 +34,10 @@ export default function App() {
         }
           
 
-        return true;
       }
 
       sendResponse({p_isleet: false});
       
-      return true;
     }
   );
 

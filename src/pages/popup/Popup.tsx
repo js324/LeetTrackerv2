@@ -49,7 +49,7 @@ function Popup() {
 
     chrome.tabs.query({active: true, lastFocusedWindow: true}, ([tab]) => {
       chrome.tabs.sendMessage(tab.id, {text: "load"}, (response) => {
-          if (response.p_isleet){
+          if (response?.p_isleet){
             console.log("this is a leetpage.");
           chrome.storage.session.get({p_name: "", p_isfave: -1, p_solved: false, p_difficulty: "", p_tags: ["  "], p_tcomp: "  ", p_scomp: "  ", p_notes: "  "}).then((stuff) => {
             console.log("get something or nothing from session storage");

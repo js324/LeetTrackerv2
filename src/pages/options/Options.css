@@ -118,3 +118,25 @@ button:hover {
   cursor: pointer;
   background-color: var(--c-buttonh);
 }
+.suboption {
+  color: var(--c-text);
+  margin: 0px 10px 0px 0px;
+  border-radius: 10px;
+  background-color: var(--c-subback);
+}
+.suboption:hover {
+  background-color: var(--c-subhove);
+}
+
+div.warning {
+  color: var(--c-text);
+  max-height: 200px;
+  font-size: 15px;
+  overflow-y: hidden;
+  margin: 10px 0px 0px 0px;
+  padding: 2px 10px;
+  transition: max-height 0.2s ease-in;
+}
+div.hidden {
+  max-height:0px;
+}

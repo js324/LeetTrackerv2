@@ -16,7 +16,8 @@ const manifest: chrome.runtime.ManifestV3 = {
   permissions: [
     "identity",
     "identity.email",
-    "storage"
+    "storage",
+    "contextMenus"
   ],  
   background: {
     service_worker: "src/pages/background/index.js",
