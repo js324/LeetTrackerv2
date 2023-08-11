@@ -201,13 +201,12 @@ function getSheetFromDrive(token) {
           'Content-Type': 'application/json'
         },
       };
-    fetch(
+    return fetch(
         'https://www.googleapis.com/drive/v3/files?q=trashed%3Dfalse',
         init)
         .then((response) => {
             if (!response.ok) { 
                 console.log("Getting drive sheet failed!");
-                fetchWorked = false;
                 return false;
             }
             return response.json();
@@ -215,13 +214,15 @@ function getSheetFromDrive(token) {
         .then(function(data) {
             if (data) {
                 console.log(data); //actually needs spreadsheet.get with the Spreadsheet ID (taken from drive fetch)
-                
+                if (data["files"]["length"] == 0) {
+                    return false;
+                }
                 chrome.storage.sync.set({ "spreadsheetId": data["files"][0]["id"] }).then(() => {
                     console.log("Value is set");
                 });
+                return true;
             }
         });
-        return fetchWorked;
     
 }
 function hexToRgb(hex) {
