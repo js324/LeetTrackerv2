@@ -20,7 +20,6 @@ console.log("background loaded now update");
 const API_KEY = '';
 let user_signed_in = false;
 
-
 chrome.identity.onSignInChanged.addListener(function (account_id, signedIn) {
     if (signedIn) {
         user_signed_in = true;
@@ -44,36 +43,41 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         //case 2: user previously created spreadsheet and have stored sheet id in storage
         //case 3: user previously created spreadsheet, for some reason sheet id not stored, retrieve from drive
         chrome.identity.getAuthToken({ interactive: true }, async function (token) {
-            chrome.storage.sync.get("spreadsheetId").then(async (spreadsheetId) => {
-            if (Object.keys(spreadsheetId).length === 0) { //empty
-                console.log("NO SAVED DATA");
-                if (!getSheetFromDrive(token)) { 
-                    console.log("NO SHEET IN DRIVE");
-                    createFormatSheet();
-                    
-                }
-                appendRow(token, spreadsheetId);
-            }
-            else {
-                chrome.storage.session.get({p_name: ""}).then(async ({p_name}) => {
-                    findRow(token, spreadsheetId, p_name).then(async (rowInd) => {
-                    console.log(rowInd);
-                    if (rowInd == -1) { //not found, just append
-                        appendRow(token, spreadsheetId);
+                getSheetFromDrive(token).then((gotSheet) => { //was debating to just look at key, but then have to check if user deleted it anyway
+                // if (Object.keys(spreadsheetId).length === 0)) { //empty
+                
+                    if (!gotSheet) {
+                        console.log("NO SHEET IN DRIVE");
+                        createFormatSheet().then(() => {
+                            chrome.storage.sync.get("spreadsheetId").then((spreadsheetId) => {
+                            console.log(spreadsheetId)
+                            checkThenUpdate(token, spreadsheetId);
+                            });
+                        });
                     }
                     else {
-                        updateRow(token, spreadsheetId, rowInd+1);
-                    }
-                    });
-                }); 
-
-                
-            }
+                        chrome.storage.sync.get("spreadsheetId").then((spreadsheetId) => {
+                            checkThenUpdate(token, spreadsheetId); });
+                        }
+                });            
+            
         });
-        });
-    }
+}});
     
-});
+
+function checkThenUpdate(token, spreadsheetId) {
+    chrome.storage.session.get({p_name: ""}).then(async ({p_name}) => {
+        findRow(token, spreadsheetId, p_name).then(async (rowInd) => {
+        console.log(rowInd);
+        if (rowInd == -1) { //not found, just append
+            appendRow(token, spreadsheetId);
+        }
+        else {
+            updateRow(token, spreadsheetId, rowInd+1);
+        }
+        });
+    }); 
+}
 async function updateRow(token, spreadsheetId, rowInd) {
     chrome.storage.session.get({url: "", p_name: "", p_isfave: 0, p_solved: 0, p_difficulty: "", p_tags: ["  "], 
     p_tcomp: "  ", p_scomp: "  ", p_notes: "  "}).then(({url, p_name, p_isfave, p_solved, p_difficulty, p_tags, p_tcomp, p_scomp, p_notes}) => {
@@ -155,7 +159,7 @@ async function deleteSheet(token, spreadsheetId) {
         `https://www.googleapis.com/drive/v2/files/${spreadsheetId["spreadsheetId"]}/trash`,
         init)
 }
-function createFormatSheet() {
+async function createFormatSheet() {
     chrome.identity.getAuthToken({ interactive: true }, function (token) {
         console.log(token);
         let init = {
@@ -170,7 +174,7 @@ function createFormatSheet() {
                 'properties': { 'title': 'LeetTracker Spreadsheet' }
             })
           };
-        fetch(
+        return fetch(
             'https://sheets.googleapis.com/v4/spreadsheets',
             init)
             .then((response) => response.json())
@@ -180,10 +184,11 @@ function createFormatSheet() {
                 chrome.storage.sync.set({ 'sheetId': data['sheets'][0]['properties']['sheetId']});
                 chrome.storage.sync.set({ "spreadsheetId": data["spreadsheetId"] }).then(() => {
                     console.log("Value is set");
-                    
+                    addFormatHeader(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']);
+                    formatDataRows(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']);
+                    return;
                 });
-                addFormatHeader(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']);
-                formatDataRows(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']);
+                
             });
             
             
@@ -214,7 +219,7 @@ function getSheetFromDrive(token) {
         .then(function(data) {
             if (data) {
                 console.log(data); //actually needs spreadsheet.get with the Spreadsheet ID (taken from drive fetch)
-                if (data["files"]["length"] == 0) {
+                if (data["files"].length == 0) {
                     return false;
                 }
                 chrome.storage.sync.set({ "spreadsheetId": data["files"][0]["id"] }).then(() => {
