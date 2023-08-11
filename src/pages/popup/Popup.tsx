@@ -68,6 +68,7 @@ function Popup() {
               setTimeComp(stuff.p_tcomp);
               setSpaceComp(stuff.p_scomp);
               setNotes(stuff.p_notes);
+              console.log(response.p_solved);
               refresh();
             } else {
               console.log("getting new data, new problem");
@@ -76,8 +77,8 @@ function Popup() {
               setDifficulty(response.p_difficulty);
               setTags(response.p_tags);
               setSolved(response.p_solved);
-
-              chrome.storage.session.set({ p_name: response.p_name, p_isfave: -1, p_solved: response.p_solved,
+              
+              chrome.storage.session.set({ url: response.url, p_name: response.p_name, p_isfave: -1, p_solved: response.p_solved,
                 p_difficulty: response.p_difficulty, p_tags: response.p_tags, p_tcomp: "", p_scomp: "", p_notes: "" }, () => {console.log("saved new problem");});
             }
           })

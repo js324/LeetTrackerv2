@@ -25,7 +25,7 @@ export default function App() {
         }              
 
         if (name) {
-          sendResponse({p_isleet: true, p_name: name.textContent, p_difficulty: difficulty.textContent, p_tags: taglist, p_solved: solvestatus});
+          sendResponse({p_isleet: true, p_name: name.textContent, p_difficulty: difficulty.textContent, p_tags: taglist, p_solved: solvestatus, url: document.URL});
         } else {
           if (document.URL.indexOf("/submissions/") != 1)
             sendResponse({p_isleet: true, p_name: " x ", p_solved: solvestatus});

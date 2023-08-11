@@ -1,6 +1,11 @@
 import React from 'react';
 
 function Footer(props) {
+  function handleClick(e) {
+    e.preventDefault();
+    console.log("attempting sign-in") 
+    chrome.runtime.sendMessage({ message: 'submit' });
+  }
 
 function optionspage() {
   chrome.runtime.openOptionsPage();
@@ -38,7 +43,7 @@ function toleetcode() {
       </button>
       </div>
       { props.isLeet && (
-          <button className="submit" type="button"><strong className="link">Submit</strong></button>
+          <button className="submit" type="button" onClick={handleClick}><strong className="link">Submit</strong></button>
       )}
       { !props.isLeet && (
           <button className="submit" type="button" onClick={toleetcode}><strong className="link">Go to LeetCode</strong></button>
