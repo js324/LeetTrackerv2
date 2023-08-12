@@ -4,7 +4,19 @@ function Footer(props) {
   function handleClick(e) {
     e.preventDefault();
     console.log("attempting sign-in") 
-    chrome.runtime.sendMessage({ message: 'submit' });
+    chrome.runtime.sendMessage({ message: 'submit' }, (response) => {
+      switch (response?.result) {
+        case 1: //new spreadsheet was made
+          alert("A new spreadsheet has been made and updated!");
+          break;
+        case 2: //spreadsheet already exists
+          alert("Spreadsheet updated!");
+          break;
+        default: //idk
+          alert("Error: update might have failed");
+          break;
+      }
+    });
   }
 
 function optionspage() {
@@ -23,7 +35,8 @@ function toleetcode() {
   return (
     <footer className="rowed">
       <div className="buttons">
-      <button type="button" className="icon-button" onClick={optionspage}>
+        
+      <button type="button" className="icon-button" onClick={optionspage}> 
         <svg width="15.00" height="15.00" viewBox="0.00 0.00 150.00 160.00" xmlns="http://www.w3.org/2000/svg">
         <g strokeLinecap="round">
         <path d="M74.95,40.49 C72.29,40.59 64.22,42.24 61.06,43.47 C57.76,44.80 52.67,48.57 50.14,51.35 C47.50,54.29 44.17,59.06 42.68,62.22 C41.17,65.52 39.95,71.45 39.96,75.27 C40.02,79.10 41.43,85.31 43.12,89.25 C44.80,93.09 47.87,98.02 50.12,100.16 C52.26,102.15 59.17,106.62 61.60,107.75 C64.13,108.89 69.98,110.15 73.36,110.26 C77.37,110.35 82.83,109.63 86.02,108.59 C88.81,107.64 94.07,104.71 96.18,103.20 C98.57,101.45 101.84,97.97 103.55,95.14 C105.15,92.45 108.26,86.32 109.06,83.59 C109.83,80.88 109.84,74.80 109.29,70.65 C108.69,66.41 106.67,60.45 104.75,57.30 C102.79,54.16 98.37,49.54 94.97,47.12 C91.53,44.72 85.68,42.00 82.19,41.17 C80.42,40.78 76.82,40.44 74.95,40.49 Z" fill="none" strokeWidth="34.99" strokeOpacity="1.00" strokeLinejoin="round"/>

@@ -5,7 +5,7 @@ function ProblemDate(props) {
   function formatDate() {
     let currentDate = new Date();
     let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    props.setDate(currentDate.getDate() + " " + months[currentDate.getMonth()] + ", " + currentDate.getFullYear());
+    props.setDate(months[currentDate.getMonth()] + " " + currentDate.getDate() + ", " + currentDate.getFullYear());
     return props.date;  
   }
   
