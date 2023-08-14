@@ -68,7 +68,55 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });            
         });
         return true;
-}});
+    }
+    if (request.message === "reload") { // responds with 1=no past data; 0=has past data
+        console.log("checking sheet for a past entry");
+        chrome.identity.getAuthToken({ interactive: true }, async function (token) {
+            getSheetFromDrive(token).then((gotSheet) => { 
+                if (!gotSheet) { //no sheet - send response 
+                    console.log("NO SHEET IN DRIVE");
+                    sendResponse({result: 1}); //
+                }
+                else { //case 2, has sheet
+                    chrome.storage.sync.get("spreadsheetId").then((spreadsheetId) => {
+                        findRow(token, spreadsheetId, request.p_name).then(async(rowInd) => {
+                            if (rowInd == -1) { // didn't find a matching row/no past data
+                                console.log ("couldn't find past entry");
+                                sendResponse({result: 1});
+                            } else { // found a past entry
+                                console.log("found a past entry");
+                                let init = {
+                                    method: 'GET',
+                                    async: true,
+                                    headers: {
+                                    Authorization: 'Bearer ' + token,
+                                    'Content-Type': 'application/json'
+                                    },
+                                };
+                                return fetch(
+                                    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId["spreadsheetId"]}/values/A${rowInd+1}:I${rowInd+1}`,
+                                    init)
+                                    .then((response) => {
+                                        if (!response.ok) { 
+                                            console.log("Getting drive sheet failed!");
+                                            return false;
+                                        }
+                                        
+                                        return response.json();
+                                    }).then((row) => { 
+                                        console.log(row["values"][0]);
+                                        sendResponse({result: 0, data: row["values"][0]});
+                                    });
+                            }
+                        });
+                    });
+                }
+            });            
+    });
+
+        return true;
+    }
+});
     
 
 function checkThenUpdate(token, spreadsheetId) {
