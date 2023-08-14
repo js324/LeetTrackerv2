@@ -34,7 +34,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.identity.getAuthToken({ interactive: true }, async function (token) {
             chrome.storage.sync.get("spreadsheetId").then(async (spreadsheetId) => {
                 deleteSheet(token, spreadsheetId);
-                createFormatSheet();
+                createFormatSheet(token);
             });
         });
     }
@@ -43,23 +43,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         //case 2: user previously created spreadsheet and have stored sheet id in storage
         //case 3: user previously created spreadsheet, for some reason sheet id not stored, retrieve from drive
         console.log("preparing to submit");
-        chrome.identity.getAuthToken({ interactive: true }, async function (token) {
-                getSheetFromDrive(token).then((gotSheet) => { //was debating to just look at key, but then have to check if user deleted it anyway
+        chrome.identity.getAuthToken({ interactive: true }, function (token) {
+                getSheetFromDrive(token).then(async (gotSheet) => { //was debating to just look at key, but then have to check if user deleted it anyway
                 // if (Object.keys(spreadsheetId).length === 0)) { //empty
                     console.log("preparing to submit..");
                     if (!gotSheet) { //case 1, no sheet
                         console.log("NO SHEET IN DRIVE");
-                        createFormatSheet().then(() => {
-                            chrome.storage.sync.get("spreadsheetId").then((spreadsheetId) => {
-                            console.log(spreadsheetId)
-                            checkThenUpdate(token, spreadsheetId);
+                        // createFormatSheet(token).then((spreadsheetId) => {
+                            let spreadsheetId = await createFormatSheet(token);
+                            appendRow(token, spreadsheetId);
                             console.log("sent response 1");
                             sendResponse({result: 1});
-                            });
-                        });
+                        // });
+                        
+                    
                     }
                     else { //case 2, has sheet
-                        chrome.storage.sync.get("spreadsheetId").then((spreadsheetId) => {
+                        chrome.storage.sync.get("spreadsheetId").then(({ spreadsheetId }) => {
+                            console.log(spreadsheetId);
                             checkThenUpdate(token, spreadsheetId); });
                             console.log("sent response 2");
                             sendResponse({result: 2});
@@ -84,6 +85,7 @@ function checkThenUpdate(token, spreadsheetId) {
     }); 
 }
 async function updateRow(token, spreadsheetId, rowInd) {
+    console.log(spreadsheetId);
     chrome.storage.session.get({url: "", p_name: "", p_isfave: 0, p_solved: 0, p_difficulty: "", p_tags: ["  "], 
     p_tcomp: "  ", p_scomp: "  ", p_notes: "  "}).then(({url, p_name, p_isfave, p_solved, p_difficulty, p_tags, p_tcomp, p_scomp, p_notes}) => {
         p_solved = p_solved == 1 ? true : false;//have to do this check because technically can be -1
@@ -109,7 +111,7 @@ async function updateRow(token, spreadsheetId, rowInd) {
     };
         //8
     fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId["spreadsheetId"]}/values/A${rowInd}?valueInputOption=USER_ENTERED`,
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A${rowInd}?valueInputOption=USER_ENTERED`,
         init)
         .then((response) => response.json())
         .then(function(data) {
@@ -130,7 +132,7 @@ async function findRow(token, spreadsheetId, title) {
         },
       };
     return fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId["spreadsheetId"]}/values:batchGet?ranges=A:A`,
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?ranges=A:A`,
         init)
         .then((response) => {
             if (!response.ok) { 
@@ -164,43 +166,33 @@ async function deleteSheet(token, spreadsheetId) {
         `https://www.googleapis.com/drive/v2/files/${spreadsheetId["spreadsheetId"]}/trash`,
         init)
 }
-async function createFormatSheet() {
-    chrome.identity.getAuthToken({ interactive: true }, function (token) {
-        console.log(token);
-        let init = {
-            method: 'POST',
-            async: true,
-            headers: {
-              Authorization: 'Bearer ' + token,
-              'Content-Type': 'application/json'
-            },
-            'contentType': 'json',
-            body: JSON.stringify({
-                'properties': { 'title': 'LeetTracker Spreadsheet' }
-            })
-          };
-        return fetch(
-            'https://sheets.googleapis.com/v4/spreadsheets',
-            init)
-            .then((response) => response.json())
-            .then(function(data) {
-                console.log(data)
-                chrome.storage.sync.set({ "spreadsheetUrl": data["spreadsheetUrl"] });
-                chrome.storage.sync.set({ 'sheetId': data['sheets'][0]['properties']['sheetId']});
-                chrome.storage.sync.set({ "spreadsheetId": data["spreadsheetId"] }).then(() => {
-                    console.log("Value is set");
-                    addFormatHeader(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']).then(() => {
-                        formatDataRows(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']);
-                        return;
-                    });
-                    
-                });
-                
-            });
-            
-            
-            
-    });
+async function createFormatSheet(token) {
+    console.log(token);
+    let init = {
+        method: 'POST',
+        async: true,
+        headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        'contentType': 'json',
+        body: JSON.stringify({
+            'properties': { 'title': 'LeetTracker Spreadsheet' }
+        })
+        };
+    return fetch(
+        'https://sheets.googleapis.com/v4/spreadsheets',
+        init)
+        .then((response) => response.json())
+        .then(async (data) => {
+            console.log(data);
+            chrome.storage.sync.set({ "spreadsheetId": data["spreadsheetId"] });
+            formatDataRows(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']);
+            addFormatHeader(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']);
+            return addHeader(token, data["spreadsheetId"]);
+        });
+        
+     
 }
 function getSheetFromDrive(token) {
     
@@ -253,6 +245,7 @@ function hexToRgb(hex) {
     } : null;
 }
 async function appendRow(token, spreadsheetId) {
+    console.log(spreadsheetId);
     chrome.storage.session.get({url: "", p_name: "", p_isfave: 0, p_solved: 0, p_difficulty: "", p_tags: ["  "], 
     p_tcomp: "  ", p_scomp: "  ", p_notes: "  "}).then(({url, p_name, p_isfave, p_solved, p_difficulty, p_tags, p_tcomp, p_scomp, p_notes}) => {
         let backgroundColor = {};
@@ -327,7 +320,7 @@ async function appendRow(token, spreadsheetId) {
             };
             //8
         fetch(
-            `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId["spreadsheetId"]}:batchUpdate`,
+            `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
             init)
             .then((response) => response.json())
             .then(function(data) {
@@ -338,7 +331,7 @@ async function appendRow(token, spreadsheetId) {
     //no good way to have if/else if/ else statement for Easy,Medium,Hard
     
 }
-async function addFormatHeader(token, spreadsheetId, sheetId) {
+async function addHeader(token, spreadsheetId) {
     let init = {
         method: 'POST',
         async: true,
@@ -357,164 +350,161 @@ async function addFormatHeader(token, spreadsheetId, sheetId) {
             ]
         })
         };
-        //8
-    fetch(
+    return fetch(
         `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A1:append?valueInputOption=USER_ENTERED`,
         init)
         .then((response) => response.json())
-        .then(function(data) {
-            init = {
-                method: 'POST',
-                async: true,
-                headers: {
-                    Authorization: 'Bearer ' + token,
-                    'Content-Type': 'application/json'
-                },
-                'contentType': 'json', 
-                body: JSON.stringify({ 
-                    "requests": [
-                        {
-                            'addBanding': {
-                                'bandedRange': {
-                                    'bandedRangeId': 1,
-                                    'range': {
-                                       'sheetId': sheetId,
-                                        'startRowIndex': 0
-                                    },
-                                    'rowProperties': {
-                                      'headerColor': {
-                                        'red': 0,
-                                        'green': 0,
-                                        'blue': 1,
-                                        'alpha': 1,
-                                      },
-                                      'firstBandColor': {
-                                        'red': .92156,
-                                        'green': .9372,
-                                        'blue': .94509,
-                                        'alpha': 0,
-                                      },
-                                      'secondBandColor': {
-                                        'red': 1.0,
-                                        'green': 1.0,
-                                        'blue': 1.0,
-                                        'alpha': 0,
-                                      }
-                                    },
-                                  },
-                            },
-                        },
-                        {
-                            'updateDimensionProperties': {
-                                'range': {
-                                    'sheetId': sheetId,
-                                    'dimension': 'COLUMNS',
-                                    'startIndex': 0,
-                                    'endIndex': 1,
-                                },
-                                'properties': {
-                                    'pixelSize': 240
-                                },
-                                'fields': 'pixelSize'
-                            }
-                        },
-                        {
-                            'updateDimensionProperties': {
-                                'range': {
-                                    'sheetId': sheetId,
-                                    'dimension': 'COLUMNS',
-                                    'startIndex': 6,
-                                    'endIndex': 7,
-                                },
-                                'properties': {
-                                    'pixelSize': 500
-                                },
-                                'fields': 'pixelSize'
-                            }
-                        },
-                        {
-                            'updateDimensionProperties': {
-                                'range': {
-                                    'sheetId': sheetId,
-                                    'dimension': 'COLUMNS',
-                                    'startIndex': 7,
-                                    'endIndex': 8,
-                                },
-                                'properties': {
-                                    'pixelSize': 150
-                                },
-                                'fields': 'pixelSize'
-                            }
-                        },
-                        {
-                            'updateDimensionProperties': {
-                                'range': {
-                                    'sheetId': sheetId,
-                                    'dimension': 'COLUMNS',
-                                    'startIndex': 8,
-                                    'endIndex': 9,
-                                },
-                                'properties': {
-                                    'pixelSize': 150
-                                },
-                                'fields': 'pixelSize'
-                            }
-                        },
-                        {
-                          "repeatCell": {
-                            "range": {
-                              "sheetId": sheetId,
-                              "startRowIndex": 0,
-                              "endRowIndex": 1,
-                              "startColumnIndex": 0
-                            },
-                            "cell": {
-                              "userEnteredFormat": {
-                                "backgroundColor": {
-                                  "red": .2901,
-                                  "green": .5254,
-                                  "blue": .9098 
-                                }, 
-                                "wrapStrategy": 'WRAP',
-                                "horizontalAlignment" : "CENTER",
-                                "textFormat": {
-                                  "foregroundColor": {
-                                    "red": 1.0,
-                                    "green": 1.0,
-                                    "blue": 1.0
-                                  },
-                                  "fontSize": 12,
-                                  "bold": true
-                                }
-                              }
-                            },
-                            "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment, wrapStrategy)"
-                          }
-                        },
-                        {
-                          "updateSheetProperties": {
-                            "properties": {
-                              "sheetId": sheetId,
-                              "gridProperties": {
-                                "frozenRowCount": 1
-                              }
-                            },
-                            "fields": "gridProperties.frozenRowCount"
-                          }
-                        }
-                      ]
-                })
-                };
-                
-            fetch(
-                `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
-                init)
-                .then((response) => response.json())
-                .then(function(data) {
-                    return;
-                });
-        });
+        .then((data) => data["spreadsheetId"]);
+}
+async function addFormatHeader(token, spreadsheetId, sheetId) {
     
+    
+    let init = {
+        method: 'POST',
+        async: true,
+        headers: {
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        'contentType': 'json', 
+        body: JSON.stringify({ 
+            "requests": [
+                {
+                    'addBanding': {
+                        'bandedRange': {
+                            'bandedRangeId': 1,
+                            'range': {
+                                'sheetId': sheetId,
+                                'startRowIndex': 0
+                            },
+                            'rowProperties': {
+                                'headerColor': {
+                                'red': 0,
+                                'green': 0,
+                                'blue': 1,
+                                'alpha': 1,
+                                },
+                                'firstBandColor': {
+                                'red': .92156,
+                                'green': .9372,
+                                'blue': .94509,
+                                'alpha': 0,
+                                },
+                                'secondBandColor': {
+                                'red': 1.0,
+                                'green': 1.0,
+                                'blue': 1.0,
+                                'alpha': 0,
+                                }
+                            },
+                            },
+                    },
+                },
+                {
+                    'updateDimensionProperties': {
+                        'range': {
+                            'sheetId': sheetId,
+                            'dimension': 'COLUMNS',
+                            'startIndex': 0,
+                            'endIndex': 1,
+                        },
+                        'properties': {
+                            'pixelSize': 240
+                        },
+                        'fields': 'pixelSize'
+                    }
+                },
+                {
+                    'updateDimensionProperties': {
+                        'range': {
+                            'sheetId': sheetId,
+                            'dimension': 'COLUMNS',
+                            'startIndex': 6,
+                            'endIndex': 7,
+                        },
+                        'properties': {
+                            'pixelSize': 500
+                        },
+                        'fields': 'pixelSize'
+                    }
+                },
+                {
+                    'updateDimensionProperties': {
+                        'range': {
+                            'sheetId': sheetId,
+                            'dimension': 'COLUMNS',
+                            'startIndex': 7,
+                            'endIndex': 8,
+                        },
+                        'properties': {
+                            'pixelSize': 150
+                        },
+                        'fields': 'pixelSize'
+                    }
+                },
+                {
+                    'updateDimensionProperties': {
+                        'range': {
+                            'sheetId': sheetId,
+                            'dimension': 'COLUMNS',
+                            'startIndex': 8,
+                            'endIndex': 9,
+                        },
+                        'properties': {
+                            'pixelSize': 150
+                        },
+                        'fields': 'pixelSize'
+                    }
+                },
+                {
+                    "repeatCell": {
+                    "range": {
+                        "sheetId": sheetId,
+                        "startRowIndex": 0,
+                        "endRowIndex": 1,
+                        "startColumnIndex": 0
+                    },
+                    "cell": {
+                        "userEnteredFormat": {
+                        "backgroundColor": {
+                            "red": .2901,
+                            "green": .5254,
+                            "blue": .9098 
+                        }, 
+                        "wrapStrategy": 'WRAP',
+                        "horizontalAlignment" : "CENTER",
+                        "textFormat": {
+                            "foregroundColor": {
+                            "red": 1.0,
+                            "green": 1.0,
+                            "blue": 1.0
+                            },
+                            "fontSize": 12,
+                            "bold": true
+                        }
+                        }
+                    },
+                    "fields": "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment, wrapStrategy)"
+                    }
+                },
+                {
+                    "updateSheetProperties": {
+                    "properties": {
+                        "sheetId": sheetId,
+                        "gridProperties": {
+                        "frozenRowCount": 1
+                        }
+                    },
+                    "fields": "gridProperties.frozenRowCount"
+                    }
+                }
+                ]
+        })
+        };
+        
+    return fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+        init)
 
         //have cell text wrap WrapStrategy (so cell text doesnt clip especially for notes)
         //maybe for review history just have another worksheet and table for tracking
