@@ -88,7 +88,7 @@ function Popup() {
           console.log("update detected: "+ stuff.p_name);
           loadStuff();
         });
-        
+        sendResponse({message: "thanks"});
       }
       return true;
 

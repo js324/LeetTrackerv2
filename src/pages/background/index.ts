@@ -25,10 +25,15 @@ let user_signed_in = false;
 chrome.tabs.onUpdated.addListener(function(tabId, change, tab) {
     //notify the content script that the page has changed
     console.log("notifying contentscript");
-    if(change.url)
-        chrome.tabs.sendMessage(tabId, {message: "update"}); 
+    if(change.url){
+        chrome.tabs.query({active:true, lastFocusedWindow:true}, ([tab]) => {
+            chrome.tabs.sendMessage(tab.id, {message: "update"});
+        })
+    }
     return true; 
 })
+
+
 
 chrome.identity.onSignInChanged.addListener(function (account_id, signedIn) {
     if (signedIn) {
