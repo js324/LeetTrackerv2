@@ -17,7 +17,8 @@ const manifest: chrome.runtime.ManifestV3 = {
     "identity",
     "identity.email",
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "tabs"
   ],  
   background: {
     service_worker: "src/pages/background/index.js",
@@ -40,7 +41,7 @@ const manifest: chrome.runtime.ManifestV3 = {
       js: ["src/pages/content/index.js"],
       // KEY for cache invalidation
       css: ["assets/css/contentStyle<KEY>.chunk.css"],
-	  run_at: "document_start",
+	  run_at: "document_end",
     },
   ],
   devtools_page: "src/pages/devtools/index.html",

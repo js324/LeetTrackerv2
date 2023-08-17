@@ -20,6 +20,16 @@ console.log("background loaded now update");
 const API_KEY = '';
 let user_signed_in = false;
 
+
+
+chrome.tabs.onUpdated.addListener(function(tabId, change, tab) {
+    //notify the content script that the page has changed
+    console.log("notifying contentscript");
+    if(change.url)
+        chrome.tabs.sendMessage(tabId, {message: "update"}); 
+    return true; 
+})
+
 chrome.identity.onSignInChanged.addListener(function (account_id, signedIn) {
     if (signedIn) {
         user_signed_in = true;
@@ -69,55 +79,72 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
         return true;
     }
-    if (request.message === "reload") { // responds with 1=no past data; 0=has past data
-        console.log("checking sheet for a past entry");
-        chrome.identity.getAuthToken({ interactive: true }, async function (token) {
-            getSheetFromDrive(token).then((gotSheet) => { 
-                if (!gotSheet) { //no sheet - send response 
-                    console.log("NO SHEET IN DRIVE");
-                    sendResponse({result: 1}); //
-                }
-                else { //case 2, has sheet
-                    chrome.storage.sync.get("spreadsheetId").then((spreadsheetId) => {
-                        findRow(token, spreadsheetId, request.p_name).then(async(rowInd) => {
-                            if (rowInd == -1) { // didn't find a matching row/no past data
-                                console.log ("couldn't find past entry");
-                                sendResponse({result: 1});
-                            } else { // found a past entry
-                                console.log("found a past entry");
-                                let init = {
-                                    method: 'GET',
-                                    async: true,
-                                    headers: {
-                                    Authorization: 'Bearer ' + token,
-                                    'Content-Type': 'application/json'
-                                    },
-                                };
-                                return fetch(
-                                    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId["spreadsheetId"]}/values/A${rowInd+1}:I${rowInd+1}`,
-                                    init)
-                                    .then((response) => {
-                                        if (!response.ok) { 
-                                            console.log("Getting drive sheet failed!");
-                                            return false;
-                                        }
-                                        
-                                        return response.json();
-                                    }).then((row) => { 
-                                        console.log(row["values"][0]);
-                                        sendResponse({result: 0, data: row["values"][0]});
-                                    });
-                            }
-                        });
-                    });
-                }
-            });            
-    });
+    if (request.message === "process") {
+        chrome.storage.sync.get({p_name: ""}).then((fromStorage) => {
 
-        return true;
+            // names do not match--> this is a new problem and variables must be updated
+            if (fromStorage.p_name != request.p_name){
+                console.log("new problem - checking sheet for a past entry");
+
+                chrome.identity.getAuthToken({ interactive: true }, async function (token) {
+                    getSheetFromDrive(token).then((gotSheet) => { 
+                        if (!gotSheet) { //no sheet - send response 
+                            console.log("NO SHEET IN DRIVE");
+                            chrome.storage.session.set({ url: request.url, p_name: request.p_name, p_isfave: -1, p_solved: request.p_solved,
+                                p_difficulty: request.p_difficulty, p_tags: request.p_tags, p_tcomp: "", p_scomp: "", p_notes: "" }, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
+                        }
+                        else { //case 2, has sheet
+                            chrome.storage.sync.get("spreadsheetId").then(({spreadsheetId}) => {
+                                console.log(spreadsheetId);
+                                findRow(token, spreadsheetId, request.p_name).then(async(rowInd) => {
+                                    if (rowInd == -1) { // didn't find a matching row/no past data
+                                        console.log ("couldn't find past entry");
+                                        chrome.storage.session.set({ url: request.url, p_name: request.p_name, p_isfave: -1, p_solved: request.p_solved,
+                                            p_difficulty: request.p_difficulty, p_tags: request.p_tags, p_tcomp: "", p_scomp: "", p_notes: "" }, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
+                                    } else { // found a past entry
+                                        loadFromSheet(token, spreadsheetId, rowInd+1, request.url);
+                                    }
+                                });
+                            });
+                        }
+                        
+                    });            
+            });
+            }
+        });
+    }
+    if (request.message === "updateSolved") {
+        chrome.storage.session.set({p_solved: true});
     }
 });
-    
+
+function loadFromSheet(token, spreadsheetId, rowInd, url) {
+    console.log("loading new problem from sheet");
+    let init = {
+        method: 'GET',
+        async: true,
+        headers: {
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/json'
+        },
+    };
+    return fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A${rowInd}:I${rowInd}`,
+        init)
+        .then((response) => {
+            if (!response.ok) { 
+                console.log("Getting drive sheet failed!");
+                return false;
+            }
+            
+            return response.json();
+        }).then((row) => { 
+            console.log(row["values"][0]);
+            const entry = row["values"][0];
+            chrome.storage.session.set({ url: url, p_name: entry[0], p_isfave: (entry[8] === "TRUE" ? 1 :0), p_solved: (entry[3] === "TRUE" ? 1 :0),
+                    p_difficulty: entry[1], p_tags: entry[2].split(","), p_tcomp: entry[4], p_scomp: entry[5], p_notes: entry[6] }, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
+        });
+}
 
 function checkThenUpdate(token, spreadsheetId) {
     chrome.storage.session.get({p_name: ""}).then(async ({p_name}) => {
@@ -157,7 +184,6 @@ async function updateRow(token, spreadsheetId, rowInd) {
             ]
         })
     };
-        //8
     fetch(
         `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A${rowInd}?valueInputOption=USER_ENTERED`,
         init)
