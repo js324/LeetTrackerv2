@@ -24,11 +24,10 @@ let user_signed_in = false;
 
 chrome.tabs.onUpdated.addListener(function(tabId, change, tab) {
     //notify the content script that the page has changed
-    console.log("notifying contentscript");
     if(change.url){
-        chrome.tabs.query({active:true, lastFocusedWindow:true}, ([tab]) => {
-            chrome.tabs.sendMessage(tab.id, {message: "update"});
-        })
+            console.log("notifying content script");
+            chrome.tabs.sendMessage(tabId, {message: "update"});
+        
     }
     return true; 
 })
@@ -85,11 +84,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
     if (request.message === "process") {
-        chrome.storage.sync.get({p_name: ""}).then((fromStorage) => {
+        chrome.storage.session.get({p_name: ""}).then(async (fromStorage) => {
 
             // names do not match--> this is a new problem and variables must be updated
             if (fromStorage.p_name != request.p_name){
-                console.log("new problem - checking sheet for a past entry");
+                console.log("prev problem: "+fromStorage.p_name);
+                console.log("this is a new problem "+request.p_name+": - checking sheet for a past entry");
 
                 chrome.identity.getAuthToken({ interactive: true }, async function (token) {
                     getSheetFromDrive(token).then((gotSheet) => { 
@@ -115,7 +115,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         
                     });            
             });
+            } else {
+                console.log("this is not a different problem");
             }
+            
         });
     }
     if (request.message === "updateSolved") {
