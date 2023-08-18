@@ -17,7 +17,6 @@ const manifest: chrome.runtime.ManifestV3 = {
     "identity",
     "identity.email",
     "storage",
-    "contextMenus",
     "tabs"
   ],  
   background: {
