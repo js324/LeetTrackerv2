@@ -1,15 +1,10 @@
 <div align="center">
 <img src="public/icon-128.png" alt="logo"/>
-<h1> Chrome Extension Boilerplate with<br/>React + Vite + TypeScript</h1>
-
-![](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
-![](https://img.shields.io/badge/Typescript-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![](https://badges.aleen42.com/src/vitejs.svg)
-![GitHub action badge](https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite/actions/workflows/build-zip.yml/badge.svg)
-<img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://github.com/Jonghakseo/chrome-extension-boilerplate-react-viteFactions&count_bg=%23#222222&title_bg=%23#454545&title=😀&edge_flat=true" alt="hits"/>
+<h1> LeetTracker /h1>
 
 
-> This project is listed in the [Awesome Vite](https://github.com/vitejs/awesome-vite)
+
+> You can find this extension [here](https://chrome.google.com/webstore/detail/leettracker/eifjkkaldpnckanlokabomfkfkbpakko)!
 
 </div>
 
@@ -17,82 +12,34 @@
 
 - [Intro](#intro)
 - [Features](#features)
-- [Installation](#installation)
-  - [Procedures](#procedures)
-- [Screenshots](#screenshots)
-  - [NewTab](#newtab)
-  - [Popup](#popup)  
-- [Examples](#examples)
-- [Documents](#documents)
+- [Privacy Policy](#privacy)
 
 ## Intro <a name="intro"></a>
-This boilerplate is made for creating chrome extensions using React and Typescript.
-> The focus was on improving the build speed and development experience with Vite.
+Looking for a way to keep track of LeetCode problems without the hassle? Automatically keep track of your notes and problem data in Google Sheets and have easy retrieval in the extension at any time!
+
+LeetTracker is meant to be a simple, hassle-free way to keep track of LeetCode problems you have done. When you view any LeetCode problem, the extension will display the problem data (title, difficulty, tags, solve status) within the pop up along with a user-submitted form to keep track of time and space complexity and general notes. Once a user submits this form, a Google Sheets spreadsheet will be created and formatted as a table if it isn't already created. Then, the data will be uploaded either as a new row entry if this problem has not been submitted before, or as an update to the row containing this problem. When you visit this problem again, the extension will pull this data into the pop-up and remind you of what you wrote!
+
+Please reach out to us if you have any comments, suggestions or feedback!
+
 
 ## Features <a name="features"></a>
-- [React 18](https://reactjs.org/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Jest](https://jestjs.io/)
-- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
-- [Vite](https://vitejs.dev/)
-- [SASS](https://sass-lang.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [ESLint](https://eslint.org/)
-- [Prettier](https://prettier.io/)
-- [Chrome Extension Manifest Version 3](https://developer.chrome.com/docs/extensions/mv3/intro/)
-- HRR(Hot Rebuild & Refresh/Reload)
+- Light Mode/Dark Mode
+- Reset Spreadsheet
+- Addition/Deletion of custom tags (along with LeetCode generated tags)
+- "Star" problems for later review
+- Track latest attempt/solve date for each problem
+- Smart detection of LeetCode tab problem data 
+- Auto-generated and formatted creation of Google Sheets
+- Auto update of spreadsheet with user-submitted data
+- Retrieval within pop up of past problem notes/data from Sheets
+- More soon to come!
 
-## Installation <a name="installation"></a>
+## Privacy Policy <a name="privacy"></a>
+LeetTracker is completely free! We do not track or store data in any database and use Chrome storage for QOL. All API calls are to Google APIs and nothing else. 
+We ask specifically for permission to 1.  upload, edit, and delete files that the extension itself creates within your Google Drive 2. read LeetCode tab data to help populate the form 3. use browser storage to store what you've been writing and display it later. 
 
-### Procedures <a name="procedures"></a>
-1. Clone this repository.
-2. Change `name` and `description` in package.json => **Auto synchronize with manifest** 
-3. Run `yarn install` or `npm i` (check your node version >= 16.6, recommended >= 18)
-4. Run `yarn dev` or `npm run dev`
-5. Load Extension on Chrome
-   1. Open - Chrome browser
-   2. Access - chrome://extensions
-   3. Check - Developer mode
-   4. Find - Load unpacked extension
-   5. Select - `dist` folder in this project (after dev or build)
-6. If you want to build in production, Just run `yarn build` or `npm run build`.
+LeetTracker is dedicated to making the process of tracking LeetCode problems done by the user easier by automating the process of recording problems within Google Sheets. The extension reads the LeetCode HTML as well as takes in a user-submitted form in order to populate rows that will be uploaded to a generated Google Sheets. The extension itself does not store data of any kind and communicates purely with Google APIs.
 
-## Screenshots <a name="screenshots"></a>
-
-### New Tab <a name="newtab"></a>
-
-<img width="971" src="https://user-images.githubusercontent.com/53500778/162631646-cd40976b-b737-43d0-8e6a-6ac090a2e2d4.png">
-
-### Popup <a name="popup"></a>
-
-<img width="314" alt="popup" src="https://user-images.githubusercontent.com/53500778/203561728-23517d46-12e3-4139-8a4f-e0b2f22a6ab3.png">
-
-## Examples <a name="examples"></a>
-- https://github.com/Jonghakseo/drag-gpt-extension
-- https://github.com/Jonghakseo/pr-commit-noti
-- https://github.com/ariburaco/chatgpt-file-uploader-extended
-
-## Documents <a name="documents"></a>
-- [Vite Plugin](https://vitejs.dev/guide/api-plugin.html)
-- [ChromeExtension](https://developer.chrome.com/docs/extensions/mv3/)
-- [Rollup](https://rollupjs.org/guide/en/)
-- [Rollup-plugin-chrome-extension](https://www.extend-chrome.dev/rollup-plugin)
+>We are completely unaffiliated with LeetCode. This is simply a tool designed for increased productivity with the site.
 
 
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Jonghakseo/chrome-extension-boilerplate-react-vite&type=Date)](https://star-history.com/#Jonghakseo/chrome-extension-boilerplate-react-vite&Date)
-
-
-
----
-## Thanks To
-
-| [Jetbrains](https://jb.gg/OpenSourceSupport)                                                                           | [Jackson Hong](https://www.linkedin.com/in/j-acks0n/)                                            |
-|--------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| <img width="100" src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo (Main) logo."> | <img width="100" src='https://avatars.githubusercontent.com/u/23139754?v=4' alt='Jackson Hong'/> |
-
-
----
-
-[Jonghakseo](https://nookpi.tistory.com/)
