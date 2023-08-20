@@ -96,7 +96,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         if (!gotSheet) { //no sheet - send response 
                             console.log("NO SHEET IN DRIVE");
                             chrome.storage.session.set({ url: request.url, p_name: request.p_name, p_isfave: -1, p_solved: request.p_solved,
-                                p_difficulty: request.p_difficulty, p_tags: request.p_tags, p_tcomp: "", p_scomp: "", p_notes: "" }, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
+                                p_difficulty: request.p_difficulty, p_tags: request.p_tags, p_tcomp: "", p_scomp: "", p_notes: "", p_entry: false}, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
                         }
                         else { //case 2, has sheet
                             chrome.storage.sync.get("spreadsheetId").then(({spreadsheetId}) => {
@@ -105,7 +105,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                                     if (rowInd == -1) { // didn't find a matching row/no past data
                                         console.log ("couldn't find past entry");
                                         chrome.storage.session.set({ url: request.url, p_name: request.p_name, p_isfave: -1, p_solved: request.p_solved,
-                                            p_difficulty: request.p_difficulty, p_tags: request.p_tags, p_tcomp: "", p_scomp: "", p_notes: "" }, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
+                                            p_difficulty: request.p_difficulty, p_tags: request.p_tags, p_tcomp: "", p_scomp: "", p_notes: "", p_entry: false}, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
                                     } else { // found a past entry
                                         loadFromSheet(token, spreadsheetId, rowInd+1, request.url);
                                     }
@@ -150,7 +150,7 @@ function loadFromSheet(token, spreadsheetId, rowInd, url) {
             console.log(row["values"][0]);
             const entry = row["values"][0];
             chrome.storage.session.set({ url: url, p_name: entry[0], p_isfave: (entry[8] === "TRUE" ? 1 :0), p_solved: (entry[3] === "TRUE" ? 1 :0),
-                    p_difficulty: entry[1], p_tags: entry[2].split(","), p_tcomp: entry[4], p_scomp: entry[5], p_notes: entry[6] }, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
+                    p_difficulty: entry[1], p_tags: entry[2].split(","), p_tcomp: entry[4], p_scomp: entry[5], p_notes: entry[6], p_entry: true}, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
         });
 }
 

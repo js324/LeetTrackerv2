@@ -8,9 +8,11 @@ function Footer(props) {
       switch (response?.result) {
         case 1: //new spreadsheet was made
           alert("A new spreadsheet has been made and updated!");
+          props.setEntry(true);
           break;
         case 2: //spreadsheet already exists
           alert("Spreadsheet updated!");
+          props.setEntry(true);
           break;
         default: //idk
           alert("Error: update might have failed");
@@ -18,6 +20,8 @@ function Footer(props) {
       }
     });
   }
+
+  const label = (props.hasEntry) ? "Update" : "Submit";
 
 function optionspage() {
   chrome.runtime.openOptionsPage();
@@ -57,7 +61,9 @@ function toleetcode() {
       </button>
       </div>
       { props.isLeet && (
-          <button className="submit" type="button" onClick={handleClick}><strong className="link">Submit</strong></button>
+          <button className="submit" type="button" onClick={handleClick}><strong className="link">
+          {label}  
+          </strong></button>
       )}
       { !props.isLeet && (
           <button className="submit" type="button" onClick={toleetcode}><strong className="link">Go to LeetCode</strong></button>

@@ -26,6 +26,7 @@ function Popup() {
   const [timeComp, setTimeComp] = useState("  "); //string
   const [spaceComp, setSpaceComp] = useState("  "); //string
   const [notes, setNotes] = useState("  "); //string
+  const [hasEntry, setEntry] = useState(false); //boolean
 
   const [tagUpdate, setTUpdate] = useState(false);
 
@@ -64,7 +65,7 @@ function Popup() {
 
   function loadStuff() {
 
-    chrome.storage.session.get({p_name: "", p_isfave: -1, p_solved: false, p_difficulty: "", p_tags: ["  "], p_tcomp: "  ", p_scomp: "  ", p_notes: "  "}).then((stuff) => {
+    chrome.storage.session.get({p_name: "", p_isfave: -1, p_solved: false, p_difficulty: "", p_tags: ["  "], p_tcomp: "  ", p_scomp: "  ", p_notes: "  ", p_entry: false}).then((stuff) => {
       console.log("get something or nothing from session storage");
       setName(stuff.p_name);
       setFave(stuff.p_isfave);
@@ -74,6 +75,7 @@ function Popup() {
       setTimeComp(stuff.p_tcomp);
       setSpaceComp(stuff.p_scomp);
       setNotes(stuff.p_notes);
+      setEntry(stuff.p_entry);
       refresh();
     });
   }
@@ -125,6 +127,11 @@ function Popup() {
       chrome.storage.session.set({p_solved: isSolved}, () => { console.log("solved="+isSolved); });
   }, [isSolved]);
 
+  useEffect(() => {
+    if (hasEntry)
+      chrome.storage.session.set({p_entry: hasEntry}, () => { console.log("pastentry="+hasEntry); });
+  }, [hasEntry]);
+
   return (
     <div className="App">
       <header>
@@ -155,7 +162,7 @@ function Popup() {
           </div>
         )
       }
-      <Footer isLeet={isLeet} />
+      <Footer isLeet={isLeet} hasEntry={hasEntry} setEntry={setEntry} />
     </div>
   );
 };
