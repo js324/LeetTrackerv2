@@ -11,6 +11,9 @@
 .DS_Store
 .env.local
 .idea
+index.html
+googlecf19dba3c2bccf2d.html
+
 
 # compiled
 utils/reload/*.js
