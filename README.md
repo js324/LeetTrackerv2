@@ -36,7 +36,10 @@ Please reach out to us if you have any comments, suggestions or feedback!
 
 ## Privacy Policy <a name="privacy"></a>
 LeetTracker is completely free! We do not track or store data in any database and use Chrome storage for QOL. All API calls are to Google APIs and nothing else. 
-We ask specifically for permission to 1.  upload, edit, and delete files that the extension itself creates within your Google Drive 2. read LeetCode tab data to help populate the form 3. use browser storage to store what you've been writing and display it later. 
+We ask specifically for permission to
+1.  upload, edit, and delete files that the extension itself creates within your Google Drive
+2. read LeetCode tab data to help populate the form
+3. use browser storage to store what you've been writing and display it later. 
 
 LeetTracker is dedicated to making the process of tracking LeetCode problems done by the user easier by automating the process of recording problems within Google Sheets. The extension reads the LeetCode HTML as well as takes in a user-submitted form in order to populate rows that will be uploaded to a generated Google Sheets. The extension itself does not store data of any kind and communicates purely with Google APIs.
 
