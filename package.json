@@ -1,6 +1,6 @@
 {
   "name": "LeetTracker",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Chrome extension that helps track solved LeetCode problems.",
   "license": "MIT",
   "repository": {
