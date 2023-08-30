@@ -29,7 +29,13 @@ function optionspage() {
 
 function tospreadsheet() {
   chrome.storage.sync.get({spreadsheetId : ""}).then(({spreadsheetId}) => 
-  {chrome.tabs.create({url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`})});
+  {
+    if (spreadsheetId === "") {
+      alert("No Spreadsheet ID found. Please submit a problem first to create a spreadsheet!");
+    } else {
+      chrome.tabs.create({url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`});
+    }
+  });
 }
 
 function toleetcode() {
