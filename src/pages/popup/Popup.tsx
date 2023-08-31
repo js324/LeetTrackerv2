@@ -66,7 +66,6 @@ function Popup() {
   function loadStuff() {
 
     chrome.storage.session.get({p_name: "", p_isfave: -1, p_solved: false, p_difficulty: "", p_tags: ["  "], p_tcomp: "  ", p_scomp: "  ", p_notes: "  ", p_entry: false}).then((stuff) => {
-      console.log("get something or nothing from session storage");
       setName(stuff.p_name);
       setFave(stuff.p_isfave);
       setSolved(stuff.p_solved)
@@ -99,32 +98,32 @@ function Popup() {
 
   useEffect(() => {
     if (isFave != -1)
-    chrome.storage.session.set({p_isfave: isFave}, () => { console.log("isFave="+isFave); });
+    chrome.storage.session.set({p_isfave: isFave}, () => {  });
   }, [isFave]);
 
   useEffect(() => {
     if (notes != "  ")
-    chrome.storage.session.set({p_notes: notes.trim()}, () => { console.log("notes="+notes); });
+    chrome.storage.session.set({p_notes: notes.trim()}, () => {  });
   }, [notes]);
 
   useEffect(() => {
     if (timeComp != "  ")
-    chrome.storage.session.set({p_tcomp: timeComp.trim()}, () => { console.log("timeComp="+timeComp); });
+    chrome.storage.session.set({p_tcomp: timeComp.trim()}, () => {  });
   }, [timeComp]);
 
   useEffect(() => {
     if (spaceComp != "  ")
-    chrome.storage.session.set({p_scomp: spaceComp.trim()}, () => { console.log("spaceComp="+spaceComp); });
+    chrome.storage.session.set({p_scomp: spaceComp.trim()}, () => {  });
   }, [spaceComp]);
 
   useEffect(() => {
     if (taglist[0] !== "  ")
-      chrome.storage.session.set({p_tags: taglist}, () => { console.log("taglist="+taglist); });
+      chrome.storage.session.set({p_tags: taglist}, () => {  });
   }, [tagUpdate]);
 
   useEffect(() => {
     if (isSolved)
-      chrome.storage.session.set({p_solved: isSolved}, () => { console.log("solved="+isSolved); });
+      chrome.storage.session.set({p_solved: isSolved}, () => {  });
   }, [isSolved]);
 
   useEffect(() => {

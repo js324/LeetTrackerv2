@@ -66,7 +66,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         // createFormatSheet(token).then((spreadsheetId) => {
                             let spreadsheetId = await createFormatSheet(token);
                             appendRow(token, spreadsheetId);
-                            console.log("sent response 1");
                             sendResponse({result: 1});
                         // });
                         
@@ -74,9 +73,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     }
                     else { //case 2, has sheet
                         chrome.storage.sync.get("spreadsheetId").then(({ spreadsheetId }) => {
-                            console.log(spreadsheetId);
                             checkThenUpdate(token, spreadsheetId); });
-                            console.log("sent response 2");
                             sendResponse({result: 2});
                         }
                 });            
@@ -88,19 +85,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
             // names do not match--> this is a new problem and variables must be updated
             if (fromStorage.p_name != request.p_name){
-                console.log("prev problem: "+fromStorage.p_name);
-                console.log("this is a new problem "+request.p_name+": - checking sheet for a past entry");
-
                 chrome.identity.getAuthToken({ interactive: true }, async function (token) {
                     getSheetFromDrive(token).then((gotSheet) => { 
                         if (!gotSheet) { //no sheet - send response 
                             console.log("NO SHEET IN DRIVE");
                             chrome.storage.session.set({ url: request.url, p_name: request.p_name, p_isfave: -1, p_solved: request.p_solved,
-                                p_difficulty: request.p_difficulty, p_tags: request.p_tags, p_tcomp: "", p_scomp: "", p_notes: "", p_entry: false}, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
+                                p_difficulty: request.p_difficulty, p_tags: request.p_tags, p_tcomp: "", p_scomp: "", p_notes: "", p_entry: false}, () => { chrome.runtime.sendMessage({message: "updatePopup"});});
                         }
                         else { //case 2, has sheet
                             chrome.storage.sync.get("spreadsheetId").then(({spreadsheetId}) => {
-                                console.log(spreadsheetId);
+                                
                                 findRow(token, spreadsheetId, request.p_name).then(async(rowInd) => {
                                     if (rowInd == -1) { // didn't find a matching row/no past data
                                         console.log ("couldn't find past entry");
@@ -147,7 +141,6 @@ function loadFromSheet(token, spreadsheetId, rowInd, url) {
             
             return response.json();
         }).then((row) => { 
-            console.log(row["values"][0]);
             const entry = row["values"][0];
             chrome.storage.session.set({ url: url, p_name: entry[0], p_isfave: (entry[8] === "TRUE" ? 1 :0), p_solved: (entry[3] === "TRUE" ? 1 :0),
                     p_difficulty: entry[1], p_tags: entry[2].split(","), p_tcomp: entry[4], p_scomp: entry[5], p_notes: entry[6], p_entry: true}, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
@@ -157,7 +150,6 @@ function loadFromSheet(token, spreadsheetId, rowInd, url) {
 function checkThenUpdate(token, spreadsheetId) {
     chrome.storage.session.get({p_name: ""}).then(async ({p_name}) => {
         findRow(token, spreadsheetId, p_name).then(async (rowInd) => {
-        console.log(rowInd);
         if (rowInd == -1) { //not found, just append
             appendRow(token, spreadsheetId);
         }
@@ -168,7 +160,6 @@ function checkThenUpdate(token, spreadsheetId) {
     }); 
 }
 async function updateRow(token, spreadsheetId, rowInd) {
-    console.log(spreadsheetId);
     chrome.storage.session.get({url: "", p_name: "", p_isfave: 0, p_solved: 0, p_difficulty: "", p_tags: ["  "], 
     p_tcomp: "  ", p_scomp: "  ", p_notes: "  "}).then(({url, p_name, p_isfave, p_solved, p_difficulty, p_tags, p_tcomp, p_scomp, p_notes}) => {
         p_solved = p_solved == 1 ? true : false;//have to do this check because technically can be -1
@@ -197,7 +188,6 @@ async function updateRow(token, spreadsheetId, rowInd) {
         init)
         .then((response) => response.json())
         .then(function(data) {
-            console.log(data);
         });
     });
 
@@ -225,9 +215,7 @@ async function findRow(token, spreadsheetId, title) {
             
             return response.json();
         }).then((data) => { 
-            console.log(data)
             rows = data['valueRanges'][0]['values'].findIndex((element) => element[0] == title);
-            console.log(rows);
             return rows === undefined ? -1 : rows;
         });
         
@@ -249,7 +237,6 @@ async function deleteSheet(token, spreadsheetId) {
         init)
 }
 async function createFormatSheet(token) {
-    console.log(token);
     let init = {
         method: 'POST',
         async: true,
@@ -267,7 +254,6 @@ async function createFormatSheet(token) {
         init)
         .then((response) => response.json())
         .then(async (data) => {
-            console.log(data);
             chrome.storage.sync.set({ "spreadsheetId": data["spreadsheetId"] });
             formatDataRows(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']);
             addFormatHeader(token, data["spreadsheetId"], data['sheets'][0]['properties']['sheetId']);
@@ -299,7 +285,6 @@ function getSheetFromDrive(token) {
         })
         .then(function(data) {
             if (data) {
-                console.log(data); //actually needs spreadsheet.get with the Spreadsheet ID (taken from drive fetch)
                 if (data["files"].length == 0) {
                     return false;
                 }
@@ -327,12 +312,10 @@ function hexToRgb(hex) {
     } : null;
 }
 async function appendRow(token, spreadsheetId) {
-    console.log(spreadsheetId);
     chrome.storage.session.get({url: "", p_name: "", p_isfave: 0, p_solved: 0, p_difficulty: "", p_tags: ["  "], 
     p_tcomp: "  ", p_scomp: "  ", p_notes: "  "}).then(({url, p_name, p_isfave, p_solved, p_difficulty, p_tags, p_tcomp, p_scomp, p_notes}) => {
         let backgroundColor = {};
         let textColor = {};
-        console.log(url, p_name, p_isfave, p_solved, p_difficulty, p_tags, p_tcomp, p_scomp, p_notes);
         p_solved = p_solved == 1 ? true : false;//have to do this check because technically can be -1
         p_isfave = p_isfave == 1 ? true : false;
 
@@ -406,7 +389,6 @@ async function appendRow(token, spreadsheetId) {
             init)
             .then((response) => response.json())
             .then(function(data) {
-                console.log(data);
             });
     });
     //Just do color coding/check with variables HERE instead of the sheets 
@@ -635,6 +617,5 @@ function formatDataRows(token, spreadsheetId, sheetId) {
         init)
         .then((response) => response.json())
         .then(function(data) {
-            console.log(data);
         });
 }

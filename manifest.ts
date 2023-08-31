@@ -15,7 +15,6 @@ const manifest: chrome.runtime.ManifestV3 = {
   },
   permissions: [
     "identity",
-    "identity.email",
     "storage",
     "tabs"
   ],  
