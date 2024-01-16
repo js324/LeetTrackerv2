@@ -67,6 +67,10 @@ export default function App() {
 
       // send the data back
       chrome.runtime.sendMessage({message: "process", p_name: name, p_difficulty: problemData.difficulty, p_tags: tags, p_solved: isSolved, url: problemUrl});
+
+      // explicitly force an update if this is a submission page and a problem has been solved
+      if (document.URL.indexOf("/submissions/") != -1 && isSolved)
+        chrome.runtime.sendMessage({message: "updateSolved"});
     }
     }
   
@@ -77,6 +81,8 @@ export default function App() {
 
       if (request.message === "update" && document.URL.indexOf("problemset") === -1) {
         getData();
+
+        
         sendResponse({message: "thanks"});
       }
 
