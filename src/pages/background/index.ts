@@ -101,7 +101,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                                         chrome.storage.session.set({ url: request.url, p_name: request.p_name, p_isfave: -1, p_solved: request.p_solved,
                                             p_difficulty: request.p_difficulty, p_tags: request.p_tags, p_tcomp: "", p_scomp: "", p_notes: "", p_entry: false}, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
                                     } else { // found a past entry
-                                        loadFromSheet(token, spreadsheetId, rowInd+1, request.url);
+                                        loadFromSheet(token, spreadsheetId, rowInd+1, request.url, request.p_solved);
                                     }
                                 });
                             });
@@ -120,7 +120,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-function loadFromSheet(token, spreadsheetId, rowInd, url) {
+function loadFromSheet(token, spreadsheetId, rowInd, url, pageSolve) {
     console.log("loading new problem from sheet");
     let init = {
         method: 'GET',
@@ -142,7 +142,8 @@ function loadFromSheet(token, spreadsheetId, rowInd, url) {
             return response.json();
         }).then((row) => { 
             const entry = row["values"][0];
-            chrome.storage.session.set({ url: url, p_name: entry[0], p_isfave: (entry[8] === "TRUE" ? 1 :0), p_solved: (entry[3] === "TRUE" ? 1 :0),
+            // load the values from the sheet with the exception of the solve status, which is still based off of the current page
+            chrome.storage.session.set({ url: url, p_name: entry[0], p_isfave: (entry[8] === "TRUE" ? 1 :0), p_solved: pageSolve,
                     p_difficulty: entry[1], p_tags: entry[2].split(","), p_tcomp: entry[4], p_scomp: entry[5], p_notes: entry[6], p_entry: true}, () => {console.log("saved new problem"); chrome.runtime.sendMessage({message: "updatePopup"});});
         });
 }

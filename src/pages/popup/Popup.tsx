@@ -65,7 +65,7 @@ function Popup() {
 
   function loadStuff() {
 
-    chrome.storage.session.get({p_name: "", p_isfave: -1, p_solved: false, p_difficulty: "", p_tags: ["  "], p_tcomp: "  ", p_scomp: "  ", p_notes: "  ", p_entry: false}).then((stuff) => {
+    chrome.storage.session.get({p_name: "", p_isfave: -1, p_solved: true, p_difficulty: "", p_tags: ["  "], p_tcomp: "  ", p_scomp: "  ", p_notes: "  ", p_entry: false}).then((stuff) => {
       setName(stuff.p_name);
       setFave(stuff.p_isfave);
       setSolved(stuff.p_solved)
